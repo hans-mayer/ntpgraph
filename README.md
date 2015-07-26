@@ -32,11 +32,28 @@
 ntp_shps -a -o -f png 127.127.28.1 0711
 
 ![](img/plot_7026.png)
+
+#### success rate for a DCF receiver 
+
+of course it can't be more than 100% 
+but there two reasons why the graph shows more than 100 % 
+1) the reference clock is updated each 64 seconds 
+therefore an exact count within one hour is hard to calculate
+2) the smooth function generates an overshot 
+adding the option -l gives sometimes better results 
+
+ntp_shps -a -s -f png 127.127.8.0 0725
+
+
 ![](img/plot_22516.png)
+
 ![](img/plot_22693.png)
+
 ![](img/plot_7266.png)
 
 ## ntp_shdiff 
+
+### usage 
 
     # ntp_shdiff
      
