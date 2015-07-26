@@ -74,7 +74,7 @@ this gives an indication how well the receiver performs
 
 the local NTP server is connected with ADSL to the Internet 
 
-###### ntp_shps -a -r -y 0:0.03 -f png 178.189.127.148 0723 
+###### ntp_shps -a -r -y 0:0.03 -f png some.ip.addr 0723 
 
 ![](img/plot_7266.png)
 
@@ -100,7 +100,7 @@ the local NTP server is connected with ADSL to the Internet
 
 #### time difference between two NTP server 
 
-###### ntp_shdiff -a -f png 127.127.28.1 178.189.127.148 0724
+###### ntp_shdiff -a -f png 127.127.28.1 some.ip.addr 0724
 
 ![](img/plot_7381.png)
 
