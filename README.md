@@ -6,6 +6,8 @@
 
 ### usage 
 
+    # ntp_shps
+     
     show NTP peerstats values as graph  - v 2015 07 14
     usage: /opt/iiasa/bin/ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE
        date is MMDD in year 2015 or YYYYMMDD or . ( . is today )
@@ -29,10 +31,30 @@
 
 ntp_shps -a -o -f png 127.127.28.1 0711
 
-![](plot_7026.png)
-![](plot_22516.png)
-![](plot_22693.png)
-![](plot_7266.png)
-![](plot_7381.png)
+![](img/plot_7026.png)
+![](img/plot_22516.png)
+![](img/plot_22693.png)
+![](img/plot_7266.png)
+
+## ntp_shdiff 
+
+    # ntp_shdiff
+     
+    show time difference for 2 NTP server - v 2015 07 15
+    usage: /usr/local/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date
+       date is MMDD in year 2015 or YYYYMMDD or . ( . is today )
+       -y range   - low:high, example -0.1:0.1 , default autorange
+       -a         - print average line
+       -l         - straight line instead of smooth csplines
+       -f IMG     - output to file in current working directory - IMG can be jpeg, png, ...
+       -t number  - values per hour
+       -m value   - maximum time difference - default 1.1
+       -D         - debug
+
+#### time difference between two NTP server 
+
+ntp_shdiff -a -f png 127.127.28.1 178.189.127.148 0724
+
+![](img/plot_7381.png)
 
 
