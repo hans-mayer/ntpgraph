@@ -2,7 +2,7 @@
 
 ### make NTP statistic files visible 
 
-## ntp_shps examples 
+## ntp_shps 
 
 ### usage 
 
@@ -44,6 +44,9 @@ adding the option -l gives sometimes better results
 
 ntp_shps -a -s -f png 127.127.8.0 0725
 
+![](img/plot_22516.png)
+
+
 #### interval between updates for a DCF receiver 
 
 if all datagrams are received all intervals are 64 seconds 
@@ -51,7 +54,8 @@ this gives an indication how well the receiver performs
 
 ntp_shps -a -i -f png -y -50:300 127.127.8.0 0723
 
-![](img/plot_22516.png)
+![](img/plot_22693.png)
+
 
 #### roundtrip delay between a remote peer and the local server 
 
@@ -59,11 +63,8 @@ the local NTP server is connected with ADSL to the Internet
 
 ntp_shps -a -r -y 0:0.03 -f png 178.189.127.148 0723 
 
-![](img/plot_22693.png)
-
-#### XX
-
 ![](img/plot_7266.png)
+
 
 ## ntp_shdiff 
 
@@ -87,5 +88,17 @@ ntp_shps -a -r -y 0:0.03 -f png 178.189.127.148 0723
 ntp_shdiff -a -f png 127.127.28.1 178.189.127.148 0724
 
 ![](img/plot_7381.png)
+
+
+## ntptconv 
+
+make the time stamp in varios statistic file human readable 
+
+example 
+
+    $ cat /var/log/ntpstats/peerstats.20150725 | grep 0.001142971
+    57228 86324.503 192.168.241.190 9024 0.005973466 0.001142971 0.000946181 0.000013892
+    $ cat /var/log/ntpstats/peerstats.20150725 | grep 0.001142971 | ntptconv
+    57228 23:58:44 192.168.241.190 9024 0.005973466 0.001142971 0.000946181 0.000013892
 
 
