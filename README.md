@@ -27,22 +27,24 @@
        -j          - show rms jitter - column 8
        -D          - debug
 
+### examples 
+
 #### offset by a GPS disciplined NTP server 
 
-ntp_shps -a -o -f png 127.127.28.1 0711
+###### ntp_shps -a -o -f png 127.127.28.1 0711
 
 ![](img/plot_7026.png)
 
 #### success rate for a DCF receiver 
 
-of course it can't be more than 100% 
+of course it can't be more than 100%.
 but there two reasons why the graph shows more than 100 % 
-* 1) the reference clock is updated each 64 seconds 
-therefore an exact count within one hour is hard to calculate
-* 2) the smooth function generates an overshot 
+* 1) the reference clock is updated each 64 seconds.  
+therefore an exact count of possible updates within one hour is hard to calculate
+* 2) the smooth function generates an overshot. 
 adding the option -l gives sometimes better results 
 
-ntp_shps -a -s -f png 127.127.8.0 0725
+###### ntp_shps -a -s -f png 127.127.8.0 0725
 
 ![](img/plot_22516.png)
 
@@ -52,7 +54,7 @@ ntp_shps -a -s -f png 127.127.8.0 0725
 if all datagrams are received all intervals are 64 seconds 
 this gives an indication how well the receiver performs 
 
-ntp_shps -a -i -f png -y -50:300 127.127.8.0 0723
+###### ntp_shps -a -i -f png -y -50:300 127.127.8.0 0723
 
 ![](img/plot_22693.png)
 
@@ -61,7 +63,7 @@ ntp_shps -a -i -f png -y -50:300 127.127.8.0 0723
 
 the local NTP server is connected with ADSL to the Internet 
 
-ntp_shps -a -r -y 0:0.03 -f png 178.189.127.148 0723 
+###### ntp_shps -a -r -y 0:0.03 -f png 178.189.127.148 0723 
 
 ![](img/plot_7266.png)
 
@@ -83,16 +85,20 @@ ntp_shps -a -r -y 0:0.03 -f png 178.189.127.148 0723
        -m value   - maximum time difference - default 1.1
        -D         - debug
 
+### example
+
 #### time difference between two NTP server 
 
-ntp_shdiff -a -f png 127.127.28.1 178.189.127.148 0724
+###### ntp_shdiff -a -f png 127.127.28.1 178.189.127.148 0724
 
 ![](img/plot_7381.png)
 
 
 ## ntptconv 
 
-make the time stamp in varios statistic file human readable 
+#### ntp time convert 
+
+make the time stamp in varios statistic files human readable 
 
 example 
 
