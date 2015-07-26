@@ -2,6 +2,15 @@
 
 ### make NTP statistic files visible 
 
+for UNIX like systems 
+
+ksh scripts using gawk and gnuplot 
+
+* ntp_shps
+* ntp_shps
+* ntptconv
+
+
 ## ntp_shps 
 
 ### usage 

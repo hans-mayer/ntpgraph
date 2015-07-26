@@ -7,6 +7,8 @@
 # Fri Apr 10 23:43:13 CEST 2015 - mayer - offset and delay graph 
 # Fri May 15 20:50:00 CEST 2015 - mayer - usage 
 # Sat Jun 27 07:39:59 CEST 2015 - mayer - min max -m 
+# Sun Jul 26 21:29:54 CEST 2015 - mayer - bugfix 
+
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES 
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS
@@ -20,7 +22,7 @@ YLBL=percent
 YEAR=`TZ=GMT date '+%Y'`
 LINES="smooth csplines"
 POLL=-1
-DTYPE=x   	# display type -s -o -d or -i option 
+DTYPE=x   	# display type -s -o -d -r or -i option 
 DEBUG=n
 # default output is to screen - could be file with option -f
 STERM="set term x11 persist"
@@ -30,7 +32,9 @@ XTICS=1
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2015 07 14 "
+    echo "show NTP peerstats values as graph  - v 2015 07 26 "
+    echo "  author: ntpgraph@ma.yer.at "
+    echo 
     echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . ( . is today ) "
     echo "       -s          - success rate "
@@ -72,7 +76,7 @@ while test $# -gt 2 -o do_once -eq 1
       -s ) DTYPE=s ; shift ;;
       -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ;;
       -o ) DTYPE=o ; LINES="" ; YLBL=offset ; shift ;;
-      -r ) DTYPE=d ; LINES="" ; YLBL=delay ; shift ;;
+      -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ;;
       -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ;;
       -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ;;
       -D ) DEBUG=y ; shift ;; 
@@ -115,9 +119,10 @@ if test $# -eq 2
     exit 1
 fi
 
-# very rudimentary check of IP addresses
+# very rudimentary check of IP addresses - V4 and V6 
 case "$IP1" in
   [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;;
+  [1-9]*:* ) ;; 
   * )   echo $0: bad IP address: "$IP1" 1>&2 
 	thisusage
         exit 1 ;;
@@ -325,7 +330,7 @@ gnuplot << EOF
   # set yrange [0:60]
   # set yrange [-1:109]
   set yrange $YRANGE
-  set style line 1 linewidth 1
+  set style line 1 linewidth $LINEWIDTH
   set style line 2 linewidth $LINEWIDTH
   # set style line 1 linecolor rgb "blue" linewidth 2
   # plot "$LIST" using 1:2 $LINES with linespoints ls 1
