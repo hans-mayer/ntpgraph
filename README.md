@@ -7,7 +7,7 @@ for UNIX like systems
 ksh scripts using gawk and gnuplot 
 
 * ntp_shps
-* ntp_shps
+* ntp_shdiff
 * ntptconv
 
 
@@ -17,7 +17,9 @@ ksh scripts using gawk and gnuplot
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2015 07 14
+    show NTP peerstats values as graph  - v 2015 07 26
+      author: ntpgraph@ma.yer.at
+
     usage: /opt/iiasa/bin/ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE
        date is MMDD in year 2015 or YYYYMMDD or . ( . is today )
        -s          - success rate
