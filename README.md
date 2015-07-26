@@ -27,7 +27,7 @@
        -j          - show rms jitter - column 8
        -D          - debug
 
-#### offset for a GPS disciplined NTP server 
+#### offset by a GPS disciplined NTP server 
 
 ntp_shps -a -o -f png 127.127.28.1 0711
 
@@ -37,17 +37,31 @@ ntp_shps -a -o -f png 127.127.28.1 0711
 
 of course it can't be more than 100% 
 but there two reasons why the graph shows more than 100 % 
-1) the reference clock is updated each 64 seconds 
+* 1) the reference clock is updated each 64 seconds 
 therefore an exact count within one hour is hard to calculate
-2) the smooth function generates an overshot 
+* 2) the smooth function generates an overshot 
 adding the option -l gives sometimes better results 
 
 ntp_shps -a -s -f png 127.127.8.0 0725
 
+#### interval between updates for a DCF receiver 
+
+if all datagrams are received all intervals are 64 seconds 
+this gives an indication how well the receiver performs 
+
+ntp_shps -a -i -f png -y -50:300 127.127.8.0 0723
 
 ![](img/plot_22516.png)
 
+#### roundtrip delay between a remote peer and the local server 
+
+the local NTP server is connected with ADSL to the Internet 
+
+ntp_shps -a -r -y 0:0.03 -f png 178.189.127.148 0723 
+
 ![](img/plot_22693.png)
+
+#### XX
 
 ![](img/plot_7266.png)
 
