@@ -1,0 +1,348 @@
+#!/usr/bin/ksh
+
+# Sat Feb 28 21:21:50 CET 2015 - mayer 
+# Sun Mar 29 22:22:12 CEST 2015 - mayer - optimized arg parser , $YEAR
+# Thu Apr  2 21:41:45 CEST 2015 - mayer - average u poll interval
+# Wed Apr  8 23:01:16 CEST 2015 - mayer - options s and i 
+# Fri Apr 10 23:43:13 CEST 2015 - mayer - offset and delay graph 
+# Fri May 15 20:50:00 CEST 2015 - mayer - usage 
+# Sat Jun 27 07:39:59 CEST 2015 - mayer - min max -m 
+
+export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES 
+export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS
+
+AWK=gawk
+TIMESPERH=1
+CNTONLY=0
+LIST=/tmp/erg.dat.$$
+YLBL=percent 
+# default this year
+YEAR=`TZ=GMT date '+%Y'`
+LINES="smooth csplines"
+POLL=-1
+DTYPE=x   	# display type -s -o -d or -i option 
+DEBUG=n
+# default output is to screen - could be file with option -f
+STERM="set term x11 persist"
+LINEWIDTH=2
+XTICS=1
+
+
+thisusage(){
+    echo 
+    echo "show NTP peerstats values as graph  - v 2015 07 14 "
+    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE "
+    echo "       date is MMDD in year $YEAR or YYYYMMDD or . ( . is today ) "
+    echo "       -s          - success rate "
+    echo "       -i          - interval between updates "
+    echo "       -a          - print average line "
+    echo "       -l          - straight line instead of smooth csplines "
+    echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
+    echo "       -y range    - low:high, example -0.1:0.1 , default autorange "
+    echo "       -c value    - y-axis is number and not percent "
+    echo "       -t value    - timestemps per hour - default 1 "
+    echo "       -p value    - poll interval used for calculation "
+    echo "       -m min max  - minimum and maximum values for calculation, only for options below "
+    echo "       -o          - show offset - column 5 "
+    echo "       -r          - show roundtrip delay - column 6 "
+    echo "       -d          - show dispersion - column 7 "
+    echo "       -j          - show rms jitter - column 8 "
+    echo "       -D          - debug "
+    echo 
+    exit 1
+}
+
+# no limitation for the y-range , can be overwritten with -y
+YRANGE='[*:*]'
+# check the arguments
+# go at least 1 time into the loop / there is no do until 
+do_once=1
+while test $# -gt 2 -o do_once -eq 1
+  do
+    do_once=0
+    case $1 in
+      -t ) TIMESPERH=$2 ; shift ; shift ;;
+      -c ) CNTONLY=1 
+           YLBL=count 
+           shift ;; 
+      -l ) LINES="with lines" ; shift ;;
+      -y ) YRANGE="[$2]" ; shift ; shift ;;
+      -p ) POLL=$2 ; shift ; shift ;;
+      -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
+      -s ) DTYPE=s ; shift ;;
+      -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ;;
+      -o ) DTYPE=o ; LINES="" ; YLBL=offset ; shift ;;
+      -r ) DTYPE=d ; LINES="" ; YLBL=delay ; shift ;;
+      -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ;;
+      -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ;;
+      -D ) DEBUG=y ; shift ;; 
+      -f ) FILE="set output \"plot_$$.$2\" "
+           STERM="set terminal $2"
+           LINEWIDTH=1
+           XTICS=2
+           echo $FILE ; shift ; shift ;;
+      -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ;; 
+      -* ) thisusage ; exit 1 ;; 
+    esac
+    if test $# -lt 2
+      then
+        thisusage
+        exit 1
+    fi
+  done
+
+case $DTYPE in
+  x ) 
+    echo "option -s , -o , -d , -r , -j or -i is mandatory " 1>&2 
+    thisusage
+    exit 1
+    ;; 
+  i ) 
+    if test CNTONLY -eq 1 
+      then 
+        echo "option -c not valid in combination with -i " 1>&2 
+        exit 1
+    fi
+    ;; 
+esac
+
+if test $# -eq 2
+  then
+    IP1=$1
+    MDATE=$2
+  else
+    thisusage
+    exit 1
+fi
+
+# very rudimentary check of IP addresses
+case "$IP1" in
+  [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;;
+  * )   echo $0: bad IP address: "$IP1" 1>&2 
+	thisusage
+        exit 1 ;;
+esac
+
+# very rudimentary check of date 
+case "$MDATE" in 
+  [0-9\?][0-9\?][0-9\?][0-9\?] ) 
+        SELDATE=$YEAR$MDATE ;;
+  [12][90][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?] )
+        SELDATE=$MDATE ;;
+  \. )  SELDATE=`TZ=GMT date +%Y%m%d` ;;
+  * )   echo $0: wrong date format - must be MMDD or . 1>&2 
+	thisusage
+    	exit 1
+    	;;
+esac
+
+if test -z "$FILE"
+  then
+    # check if DISPLAY is set ?
+    case "$DISPLAY" in
+      localhost:* ) ;;
+      "" )  echo '$DISPLAY not set' ; exit 1 ;; 
+      * ) ;;
+    esac
+fi
+
+# check if gawk is available 
+type $AWK > /dev/null
+if test $? -ne 0
+  then
+    echo try to install $AWK
+    echo if not available try a symlink to awk or change this script
+    exit 1
+fi
+
+# check where the conf file is located
+CONF=N
+if test -f /etc/ntp.conf
+  then
+    CONF=/etc/ntp.conf
+fi
+if test -f /etc/inet/ntp.conf
+  then
+    CONF=/etc/inet/ntp.conf
+fi
+if test $CONF = N
+  then
+    echo $0: ntp.conf not found
+    exit 1
+fi
+
+# is there a maxpoll interval 
+# if test -n "`grep $IP1 $CONF | grep maxpoll`" 
+#   then
+#     MAXPOLL=`grep $IP1 $CONF | awk '{ for (i = 1; i <= NF; i++) if ( $i == "maxpoll" ) print ( $(i+1) ) }'`
+#     echo MAXPOLL $MAXPOLL
+# fi
+
+if test $POLL -eq -1 
+  then
+    case $IP1 in 
+      127.127.8.0 ) POLL=64 ;; 
+      * ) POLL=1024 ;; 
+    esac 
+fi
+
+# look what is statsdir directory and peerstats file defined  
+# awk is needed for solaris to strip off the leading blanks
+STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
+PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | awk '{ print ( $4 ) }'`
+if test "$DEBUG" == y
+  then
+    echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS.$SELDATE
+    echo DAYS=$DAYS TIMESPERH=$TIMESPERH CNTONLY=$CNTONLY POLL=$POLL 
+fi
+
+if test ! -f $STATSDIR/${PEERSTATS}.$SELDATE 
+  then 
+    echo $0: file $STATSDIR/${PEERSTATS}.$SELDATE not found 
+    exit 1 
+fi 
+
+DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | awk '{ print $1 }'` 
+: echo 
+
+# peerstats column 2 are seconds after midnight 
+# myarray enhaelt anzahl gefundenet zeilen pro stunde 
+
+if test $DTYPE == s 
+  then 
+    # show success graph 
+    cat $STATSDIR/$PEERSTATS.$SELDATE | \
+    grep $IP1 | \
+    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
+      BEGIN {
+        AVERAGE = 0 ;
+        CNT4AVG = 0 ;
+      }
+      { myarray[int($2/3600*TIMESPERH)]++ 
+        CNT4AVG++ 
+      }
+      END { 
+        for (i = 0 ; i < 24*TIMESPERH ; i++ ) 
+          if ( CNTONLY == 1 ) {
+              printf ( "%.2f %.2f %.2f \n", i/TIMESPERH, myarray[i]/DAYS*TIMESPERH, CNT4AVG/24.0/DAYS ) ; } 
+            else 
+              printf ( "%.2f %.2f %.2f \n", i/TIMESPERH, myarray[i]/DAYS*POLL/36.0*TIMESPERH, CNT4AVG*POLL/864/DAYS ) 
+        # printf ( "\n" ) ; 
+      }' > $LIST 
+fi
+
+if test $DTYPE == i 
+  then 
+    # show graph with intervals 
+    cat $STATSDIR/$PEERSTATS.$SELDATE | \
+    grep $IP1 | \
+    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
+      BEGIN {
+        AVERAGE = 0 ;
+        INTERVALL = 0 ;
+        CNT4INT = 0 ;
+      }
+      { if (INTERVALL>0) 
+	  { myarrayint[CNT4INT] = $2-INTERVALL ; 
+	    myarraytime[CNT4INT] = $2/3600.0 ; 
+	    AVERAGE += $2-INTERVALL ; 
+            CNT4INT++ ; 
+          } ; 
+        INTERVALL=$2 ; 
+      } 
+      END { 
+        AVERAGE /= CNT4INT ; 
+	for (i = 0 ; i < CNT4INT ; i++ ) 
+              printf ( "%.4f %.2f %.2f \n", myarraytime[i], myarrayint[i], AVERAGE ) ;
+      }' > $LIST
+fi
+
+if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r
+  then 
+    # show offset / delay graph 
+    case $DTYPE in 
+      o ) COLUMN=5 ;; 
+      r ) COLUMN=6 ;; 
+      d ) COLUMN=7 ;; 
+      j ) COLUMN=8 ;; 
+    esac 
+    cat $STATSDIR/$PEERSTATS.$SELDATE | \
+    grep $IP1 | \
+    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
+      BEGIN {
+        AVERAGE = 0 ;
+        INTERVALL = 0 ;
+        CNT4INT = 0 ;
+      }
+      { 
+         if ( ( MIN == "" ) && ( MAX == "" ) ) {  
+	   myarrayoffset[CNT4INT] = $COLUMN
+	   myarraytime[CNT4INT] = $2/3600.0 ; 
+	   AVERAGE += $COLUMN ; 
+           CNT4INT++ ; 
+         } else { 
+           if ( ( $COLUMN >= MIN ) && ( $COLUMN <= MAX ) ) {
+             myarrayoffset[CNT4INT] = $COLUMN
+             myarraytime[CNT4INT] = $2/3600.0 ;
+             AVERAGE += $COLUMN ;
+             CNT4INT++ ;
+           }
+         }
+      } 
+      END { 
+        AVERAGE /= CNT4INT ; 
+	for (i = 0 ; i < CNT4INT ; i++ ) 
+              printf ( "%.4f %.8f %.8f \n", myarraytime[i], myarrayoffset[i], AVERAGE ) ;
+      }' > $LIST
+fi
+
+if test -n "$AVGLINE"
+  then
+    AVG="\n average: `grep -v '^#' $LIST | head -1 | awk '{ print $3 }'`"
+fi
+
+: exit 0 
+
+HOST1=`getent hosts $IP1 | awk '{ print $2 }'`
+# if reverse lookup does not work take the IP
+if test -z "$HOST1"
+  then
+    TITLE="`uname -n` - $IP1 - $SELDATE "
+  else 
+    TITLE="`uname -n` - $IP1 - $HOST1 - $SELDATE "
+fi
+
+gnuplot << EOF
+  $STERM
+  $FILE
+  set title "$TITLE $AVG"
+  set xlabel "hour"
+  set ylabel "$YLBL"
+  set xtics $XTICS
+  # set ytics 10
+  set xrange [-0.5:24.8]
+  # set yrange [0:*]
+  # set yrange [0:60]
+  # set yrange [-1:109]
+  set yrange $YRANGE
+  set style line 1 linewidth 1
+  set style line 2 linewidth $LINEWIDTH
+  # set style line 1 linecolor rgb "blue" linewidth 2
+  # plot "$LIST" using 1:2 $LINES with linespoints ls 1
+  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE 
+  # plot "$LIST" using 1:2 with linespoints
+  # pause 10
+  # plot "$LIST" using 1:2 smooth bezier  with linespoints
+  # pause 10
+EOF
+
+if test "$DEBUG" == y
+  then
+    echo plotfile: $LIST 
+    echo "$AVG "
+  else 
+    rm -f $LIST
+fi
+
+exit 0
+

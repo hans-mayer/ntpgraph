@@ -1,0 +1,292 @@
+#!/usr/bin/ksh
+# #!/usr/bin/bash
+
+# Sat Feb 28 21:21:50 CET 2015 - mayer 
+# Sun Mar 29 22:22:12 CEST 2015 - mayer - optimized arg parser , $YEAR
+# Wed Apr  1 21:46:47 CEST 2015 - mayer - ip check 
+# Wednesday, July 15, 2015 10:52:49 PM MEST - mayer 
+
+export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF
+
+AWK=gawk
+# default one point per hour 
+TIMESPERH=1
+# a temporary file deletede at the end 
+LIST=/tmp/erg.dat.$$
+# default output is to screen - could be file with option -f 
+TERM="set term x11 persist"
+# default this year 
+YEAR=`TZ=GMT date '+%Y'`
+# connect the point with curves - changed with option -l 
+LINES="smooth csplines"
+# miximum time difference, values below will be taken for calculation
+MAXTIMEDIFF=1.1
+LINEWIDTH=2
+XTICS=1
+
+
+thisusage(){
+    echo 
+    echo "show time difference for 2 NTP server - v 2015 07 15 "
+    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date "
+    echo "       date is MMDD in year $YEAR or YYYYMMDD or . ( . is today ) "
+    echo "       -y range   - low:high, example -0.1:0.1 , default autorange " 
+    echo "       -a         - print average line " 
+    echo "       -l         - straight line instead of smooth csplines " 
+    echo "       -f IMG     - output to file in current working directory - IMG can be jpeg, png, ... "
+    echo "       -t number  - values per hour  "
+    echo "       -m value   - maximum time difference - default 1.1  "
+    echo "       -D         - debug "
+    echo 
+    exit 1
+}
+ 
+type $AWK > /dev/null
+if test $? -ne 0 
+  then
+    echo try to install $AWK 
+    echo if not available try a symlink to awk or change this script 
+    exit 1 
+fi
+
+# no limitation for the y-range , can be overwritten with -y 
+YRANGE='[*:*]'
+# check the arguments 
+: echo argc: $# 
+do_once=1
+while test $# -gt 3 -o do_once -eq 1
+  do
+    : echo argc: $# 
+    do_once=0
+    case $1 in 
+      -t ) TIMESPERH=$2 ; shift ; shift ;; 
+      -y ) YRANGE="[$2]" ; shift ; shift ;; 
+      -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' $LINES ls 2 " ; shift ;; 
+      -f ) FILE="set output \"plot_$$.$2\" " 
+           TERM="set terminal $2"
+           LINEWIDTH=1
+           XTICS=2
+           echo $FILE ; shift ; shift ;; 
+      -l ) LINES="with lines" ; shift ;;
+      -D ) DEBUG=y ; shift ;;
+      -m ) MAXTIMEDIFF=$2 ; shift ; shift ;; 
+    esac 
+    if test $# -lt 3 
+      then 
+        thisusage
+        exit 1 
+    fi
+  done 
+
+: echo "$AVGLINE$ "
+
+# now we should have 2 IP addresses and 1 date field 
+if test $# -eq 3 
+  then 
+    IP1=$1 
+    IP2=$2 
+    MDATE=$3
+  else 
+    thisusage
+    exit 1 
+fi
+
+if test -z "$FILE"
+  then
+    # check if DISPLAY is set ? 
+    case "$DISPLAY" in
+      localhost:* ) ;;
+      "" )
+	    if test -z "$DISPLAY" 
+	      then 
+	        echo $0: \$DISPLAY not set 
+	        exit 1 
+	    fi
+	    ;; 
+    esac
+fi
+
+
+# very rudimentary check of date
+case "$MDATE" in
+  [0-9\?][0-9\?][0-9\?][0-9\?] ) 
+	SELDATE=$YEAR$MDATE ;;
+  [12][90][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?] ) 
+	SELDATE=$MDATE ;;
+  \. ) 	SELDATE=`TZ=GMT date +%Y%m%d` ;;
+  * )   echo $0: wrong date format - must be MMDD or YYYYMMDD or . 1>&2
+        thisusage
+        exit 1
+        ;;
+esac
+
+
+# very rudimentary check of IP addresses - V4 and V6 
+case "$IP1" in
+  [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;; 
+  [1-9]*:* ) ;; 
+  * ) 	thisusage
+  	exit 1 ;;
+esac 
+
+case "$IP2" in
+  [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;; 
+  [1-9]*:* ) ;; 
+  * ) 	thisusage
+  	exit 1 ;;
+esac 
+
+# check where the conf file is located 
+CONF=N
+if test -f /etc/ntp.conf 
+  then 
+    CONF=/etc/ntp.conf
+fi
+if test -f /etc/inet/ntp.conf 
+  then 
+    CONF=/etc/inet/ntp.conf
+fi
+if test $CONF = N 
+  then 
+    echo $0: ntp.conf not found 
+    exit 1 
+fi
+
+# what is statsdir directory and peerstats file ? 
+# awk is needed for solaris to strip off the leading blanks 
+STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
+PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | awk '{ print ( $4 ) }'`
+: echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS
+
+DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | awk '{ print $1 }'`
+: echo 
+: IP1=131.130.251.107
+: IP2=192.168.241.190
+
+# peerstats column 2 are seconds after midnight 
+# myarray enhaelt anzahl gefundenet zeilen pro stunde 
+: echo $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 
+cat $STATSDIR/$PEERSTATS.$SELDATE | \
+$AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v MAXTIMEDIFF=$MAXTIMEDIFF '
+  BEGIN {
+    # print ( "awk begin " ) ; 
+    IP1LAST = -1 ; 
+    IP2LAST = -1 ; 
+    AVERAGE = 0 ; 
+    CNT4AVG = 0 ; 
+  }
+  { TSLOT = int($2/3600*TIMESPERH) ;
+    # print ( IP1 , IP1LAST, IP2, IP2LAST, $3, $5  ) ; 
+    if ( ( IP1 == $3 ) && ( IP1LAST == -1 ) ) { 
+      # print ( "init IP1 " ) ; 
+      IP1LAST = 1 ; 
+      TIME1 = $5 ; 
+    } ; 
+    if ( ( IP2 == $3 ) && ( IP2LAST == -1 ) ) { 
+      # print ( "init IP2 " ) ; 
+      IP2LAST = 1 ; 
+      TIME2 = $5 ; 
+    } ; 
+    if ( ( IP1LAST == 1 ) && ( IP2 == $3 ) ) {
+      DIFFTIME = TIME1 - $5 ; 
+      if ( ( DIFFTIME < MAXTIMEDIFF ) && ( DIFFTIME > -MAXTIMEDIFF ) ) { 
+        myarrayC[TSLOT]++ ; 
+        myarrayT[TSLOT] += DIFFTIME ; 
+        IP1LAST = 0 ; 
+        IP2LAST = 1 ;
+        AVERAGE += DIFFTIME ; 
+        CNT4AVG++ ; 
+      } 
+      else 
+        printf ( "%1.10f %s %02d:%02d:%02d %s \n" , DIFFTIME , $2, $2/3600, $2/60%60, $2%60, IP2 ) | "cat 1>&2" 
+    } ; 
+    if ( IP2 == $3 ) TIME2 = $5 ; 
+    if ( ( IP2LAST == 1 ) && ( IP1 == $3 ) ) {
+      DIFFTIME = $5 - TIME2 ; 
+      if ( ( DIFFTIME < MAXTIMEDIFF ) && ( DIFFTIME > -MAXTIMEDIFF ) ) { 
+        myarrayC[TSLOT]++ ; 
+        myarrayT[TSLOT] += DIFFTIME ; 
+        IP1LAST = 1 ; 
+        IP2LAST = 0 ;
+        AVERAGE += DIFFTIME ; 
+        CNT4AVG++ ; 
+      } 
+      else 
+        printf ( "%1.10f %s %02d:%02d:%02d %s \n" , DIFFTIME , $2, $2/3600, $2/60%60, $2%60, IP1 ) | "cat 1>&2" 
+    } ; 
+    if ( IP1 == $3 ) TIME1 = $5 ; 
+    myarray[int($2/3600*TIMESPERH)]++ }
+  END { 
+    AVG = AVERAGE / CNT4AVG ; 
+    for (i = 0 ; i <= 24*TIMESPERH ; i++ ) {
+      # printf ( "%.2f %.6f %d %d \n", i/TIMESPERH, myarrayT[i], myarrayC[i], myarray[i] ) | "cat 1>&2" ; 
+      if ( myarrayC[i] > 0 ) 
+          printf ( "%.2f %.6f %.6f \n", i/TIMESPERH, myarrayT[i]/myarrayC[i], AVG ) ; 
+        else 
+          printf ( "# %.3f %.6f \n", 0, 0 ) ; 
+    } ; 
+    print ( "\n" ) ; 
+    # print ( "average: " AVG "\n" ) | "cat 1>&2" ; 
+  }' > $LIST
+
+: exit 0 
+
+HOST1=`getent hosts $IP1 | awk '{ print $2 }'`
+HOST2=`getent hosts $IP2 | awk '{ print $2 }'`
+if test -n "$AVGLINE" 
+  then 
+    AVG="- average: `grep -v '^#' $LIST | head -1 | awk '{ print $3 }'`"
+fi
+# if reverse lookup does not work take the IP 
+if test -z "$HOST1"
+  then 
+    HOST1=$IP1
+fi
+if test -z "$HOST2"
+  then 
+    HOST2=$IP2
+fi
+
+# result file could be empty - avoid additional error messages 
+if test ! -s "$LIST" 
+  then 
+    echo "no data found " 
+    thisusage
+    exit 1 
+fi 
+
+gnuplot << EOF
+  $TERM
+  $FILE 
+  set title "`uname -n`: $IP1 - $IP2 - $SELDATE \n $HOST1 - $HOST2 $AVG"
+  set xlabel "hour"
+  set ylabel "offset"
+  set xtics $XTICS
+  # set ytics 10
+  set xrange [-0.5:24.8]
+  # set yrange [0:*]
+  # set yrange [0:60]
+  # set yrange [-1:109]
+  set yrange $YRANGE
+  set style line 1 linewidth 2
+  set style line 2 linewidth 1
+  # set style line 1 linecolor rgb "blue" linewidth 2
+  # plot "$LIST" using 1:2 $LINES with linespoints ls 1
+  plot "$LIST" using 1:2 title 'offset' $LINES ls 1 $AVGLINE
+  # plot "$LIST" using 1:2 with linespoints
+  # pause 10
+  # plot "$LIST" using 1:2 smooth bezier  with linespoints
+  # pause 10
+EOF
+
+if test "$DEBUG" == y
+  then
+    echo STATSDIR $STATSDIR PEERSTATS ${PEERSTATS}.$SELDATE
+    echo plotfile: $LIST
+    echo "$AVG "
+  else
+    rm -f $LIST
+fi
+
+exit 0 
+

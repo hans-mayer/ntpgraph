@@ -1,0 +1,8 @@
+:
+
+# Sun Apr  5 20:33:05 CEST 2015
+# convert second per day in human readable form 
+
+awk '{ printf ( "%s %02d:%02d:%02d %s %s %s %s %s %s \n" , $1, $2/3600, $2/60%60, $2%60, $3, $4, $5, $6, $7, $8 ) }'
+
+
