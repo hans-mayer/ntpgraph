@@ -197,6 +197,7 @@ STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ 
 PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | awk '{ print ( $4 ) }'`
 if test "$DEBUG" == y
   then
+    echo CONF $CONF
     echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS.$SELDATE
     echo DAYS=$DAYS TIMESPERH=$TIMESPERH CNTONLY=$CNTONLY POLL=$POLL 
 fi
