@@ -8,6 +8,7 @@
 # Fri May 15 20:50:00 CEST 2015 - mayer - usage 
 # Sat Jun 27 07:39:59 CEST 2015 - mayer - min max -m 
 # Sun Jul 26 21:29:54 CEST 2015 - mayer - bugfix 
+# Sun Aug 16 14:44:04 CEST 2015 - mayer - bugfix $AWK
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES 
@@ -32,7 +33,7 @@ XTICS=1
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2015 07 26 "
+    echo "show NTP peerstats values as graph  - v 2015 08 16 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
     echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE "
@@ -179,7 +180,7 @@ fi
 # is there a maxpoll interval 
 # if test -n "`grep $IP1 $CONF | grep maxpoll`" 
 #   then
-#     MAXPOLL=`grep $IP1 $CONF | awk '{ for (i = 1; i <= NF; i++) if ( $i == "maxpoll" ) print ( $(i+1) ) }'`
+#     MAXPOLL=`grep $IP1 $CONF | $AWK '{ for (i = 1; i <= NF; i++) if ( $i == "maxpoll" ) print ( $(i+1) ) }'`
 #     echo MAXPOLL $MAXPOLL
 # fi
 
@@ -194,7 +195,7 @@ fi
 # look what is statsdir directory and peerstats file defined  
 # awk is needed for solaris to strip off the leading blanks
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
-PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | awk '{ print ( $4 ) }'`
+PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
 if test "$DEBUG" == y
   then
     echo CONF $CONF
@@ -208,7 +209,7 @@ if test ! -f $STATSDIR/${PEERSTATS}.$SELDATE
     exit 1 
 fi 
 
-DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | awk '{ print $1 }'` 
+DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'` 
 : echo 
 
 # peerstats column 2 are seconds after midnight 
@@ -304,12 +305,12 @@ fi
 
 if test -n "$AVGLINE"
   then
-    AVG="\n average: `grep -v '^#' $LIST | head -1 | awk '{ print $3 }'`"
+    AVG="\n average: `grep -v '^#' $LIST | head -1 | $AWK '{ print $3 }'`"
 fi
 
 : exit 0 
 
-HOST1=`getent hosts $IP1 | awk '{ print $2 }'`
+HOST1=`getent hosts $IP1 | $AWK '{ print $2 }'`
 # if reverse lookup does not work take the IP
 if test -z "$HOST1"
   then

@@ -2,7 +2,7 @@
 
 # Sat Aug 15 13:33:59 CEST 2015
 
-export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM TITLE YLABEL
+export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM TITLE YLABEL HOSTN MYADDR
 
 AWK=gawk
 YEAR=`TZ=GMT date '+%Y'`
@@ -34,7 +34,7 @@ while test $# -gt $MINARGS -o do_once -eq 1
     case $1 in
       -D ) DEBUG=y ; shift ;;
       -f ) FILE="set output \"plot_$$.$2\" "
-           STERM="set terminal $2"
+           STERM="set terminal $2 size 800,500"
            LINEWIDTH=1
            echo $FILE ; shift ; shift ;;
       -* ) thisusage ; exit 1 ;;
@@ -107,7 +107,7 @@ fi
 # look what is statsdir directory and peerstats file defined
 # awk is needed for solaris to strip off the leading blanks
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
-PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | awk '{ print ( $4 ) }'`
+PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
 if test "$DEBUG" == y
   then
     echo CONF $CONF
@@ -123,16 +123,23 @@ fi
 
 cat $STATSDIR/${PEERSTATS}.$SELDATE | $AWK '{ print ( $3 ) }' | sort -u | $AWK '{ print ( $1 , NR ) }' > $TMPIPADDR
 # max ip found + 1 
-YRANGE=`wc -l $TMPIPADDR | awk '{ print ( "[0.8:" $1 + 1 "]" ) }'`
-TITLE=`cat $TMPIPADDR  | awk '{ print ( $2 ":" , $1 ) }' | tr "\n" " "`
+YRANGE=`wc -l $TMPIPADDR | $AWK '{ print ( "[0.8:" $1 + 1 "]" ) }'`
+TITLE=`cat $TMPIPADDR  | $AWK '{ print ( $2 ":" , $1 ) }' | tr "\n" " "`
+MYADDR=`ifconfig -a | grep inet | egrep -v '::1/128|127.0.0.1|inet6' | head -1 | $AWK '{ print $2 }'`
+HOSTN=`hostname`
 
 # replace IP address by index number 
-SEDARG=`cat $TMPIPADDR | awk '{ print ( "-e s/" $1 "/" $2 "/" ) }'` 
+SEDARG=`cat $TMPIPADDR | $AWK '{ print ( "-e s/" $1 "/" $2 "/" ) }'` 
+
+# first host has number 1 
+# for peer status word see https://www.eecis.udel.edu/~mills/ntp/html/decode.html#peer
+# if host 1 is system peer then it gets value 1.6 
+
 sed $SEDARG < $STATSDIR/${PEERSTATS}.$SELDATE | $AWK '{ print ( $2, $3, $4 ) }' | \
   $AWK '{ print ( $1 , $2 , substr ( $3, 2, 1 ) ) }' | \
   $AWK '{ printf ( "%.4f %.2f \n", $1/3600, $2 + $3/10 ) }' > $LIST
 
-YLABEL='.0 rej .1 x false .3 - out .4 + cand .5 # bup .6 * peer .7 o pps '
+YLABEL='.0 reject  /  .1 x falsetick  /  .3 - outlyer \n.4 + candidate  /  .5 # backup  /  .6 * peer  /  .7 o pps '
 
 gnuplot << EOF
   $STERM
@@ -144,7 +151,7 @@ gnuplot << EOF
   set xtics 1
   set ytics 0.2
   set xrange [-0.5:24.8]
-  plot "$LIST" using 1:2 
+  plot "$LIST" using 1:2 title "$HOSTN - $MYADDR" 
 EOF
 
 if test "$DEBUG" == y

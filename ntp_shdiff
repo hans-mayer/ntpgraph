@@ -5,6 +5,8 @@
 # Sun Mar 29 22:22:12 CEST 2015 - mayer - optimized arg parser , $YEAR
 # Wed Apr  1 21:46:47 CEST 2015 - mayer - ip check 
 # Wednesday, July 15, 2015 10:52:49 PM MEST - mayer 
+# Sun Aug 16 14:44:04 CEST 2015 - mayer - bugfix $AWK 
+
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF
 
@@ -27,7 +29,9 @@ XTICS=1
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2015 07 15 "
+    echo "show time difference for 2 NTP server - v 2015 08 16 "
+    echo "  author: ntpgraph@ma.yer.at "
+    echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . ( . is today ) "
     echo "       -y range   - low:high, example -0.1:0.1 , default autorange " 
@@ -155,10 +159,10 @@ fi
 # what is statsdir directory and peerstats file ? 
 # awk is needed for solaris to strip off the leading blanks 
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
-PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | awk '{ print ( $4 ) }'`
+PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
 : echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS
 
-DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | awk '{ print $1 }'`
+DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'`
 : echo 
 : IP1=131.130.251.107
 : IP2=192.168.241.190
@@ -231,11 +235,11 @@ $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v MAXTIMEDIF
 
 : exit 0 
 
-HOST1=`getent hosts $IP1 | awk '{ print $2 }'`
-HOST2=`getent hosts $IP2 | awk '{ print $2 }'`
+HOST1=`getent hosts $IP1 | $AWK '{ print $2 }'`
+HOST2=`getent hosts $IP2 | $AWK '{ print $2 }'`
 if test -n "$AVGLINE" 
   then 
-    AVG="- average: `grep -v '^#' $LIST | head -1 | awk '{ print $3 }'`"
+    AVG="- average: `grep -v '^#' $LIST | head -1 | $AWK '{ print $3 }'`"
 fi
 # if reverse lookup does not work take the IP 
 if test -z "$HOST1"
