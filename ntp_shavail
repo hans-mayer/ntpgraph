@@ -1,8 +1,11 @@
 #!/usr/bin/ksh
 
 # Sat Aug 15 13:33:59 CEST 2015
+# Wednesday, August 19, 2015 03:42:24 PM CEST - mayer 
 
-export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM TITLE YLABEL HOSTN MYADDR
+
+export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
+export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR
 
 AWK=gawk
 YEAR=`TZ=GMT date '+%Y'`
@@ -14,7 +17,7 @@ STERM="set term x11 persist"
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2015 08 16 "
+    echo "show NTP available peers as graph  - v 2015 08 19 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -D ] [ -f IMG ] DATE "
@@ -34,7 +37,7 @@ while test $# -gt $MINARGS -o do_once -eq 1
     case $1 in
       -D ) DEBUG=y ; shift ;;
       -f ) FILE="set output \"plot_$$.$2\" "
-           STERM="set terminal $2 size 800,500"
+           STERM="set terminal $2 size 900,500"
            LINEWIDTH=1
            echo $FILE ; shift ; shift ;;
       -* ) thisusage ; exit 1 ;;
@@ -124,7 +127,16 @@ fi
 cat $STATSDIR/${PEERSTATS}.$SELDATE | $AWK '{ print ( $3 ) }' | sort -u | $AWK '{ print ( $1 , NR ) }' > $TMPIPADDR
 # max ip found + 1 
 YRANGE=`wc -l $TMPIPADDR | $AWK '{ print ( "[0.8:" $1 + 1 "]" ) }'`
-TITLE=`cat $TMPIPADDR  | $AWK '{ print ( $2 ":" , $1 ) }' | tr "\n" " "`
+TITLE1=`cat $TMPIPADDR  | $AWK '{ print ( $2 ":" , $1 ) }' | tr "\n" " "`
+# find the DNS name for each host 
+TMP1=`cat $TMPIPADDR | \
+while read IP INDEX
+  do 
+    getent hosts $IP | $AWK -v INDEX=$INDEX '{ print ( INDEX ":" , $2 , " " ) }'
+  done `
+# now remove the line breaks 
+TITLE2=`echo $TMP1` 
+
 MYADDR=`ifconfig -a | grep inet | egrep -v '::1/128|127.0.0.1|inet6' | head -1 | $AWK '{ print $2 }'`
 HOSTN=`hostname`
 
@@ -144,7 +156,7 @@ YLABEL='.0 reject  /  .1 x falsetick  /  .3 - outlyer \n.4 + candidate  /  .5 # 
 gnuplot << EOF
   $STERM
   $FILE
-  set title "$TITLE"
+  set title "$TITLE1\n$TITLE2"
   set xlabel "hour"
   set ylabel "$YLABEL" 
   set yrange $YRANGE
