@@ -124,13 +124,17 @@ if test ! -f $STATSDIR/${PEERSTATS}.$SELDATE
     exit 1
 fi
 
-cat $STATSDIR/${PEERSTATS}.$SELDATE | $AWK '{ print ( $3 ) }' | sort -u | $AWK '{ print ( $1 , NR ) }' > $TMPIPADDR
+cat $STATSDIR/${PEERSTATS}.$SELDATE | $AWK '{ print ( $3 ) }' | sort -u | $AWK '{ print ( $1 , NR ) }' | \
+while read IP IND 
+  do 
+    echo $IP $IND `getent hosts $IP |  $AWK '{ print ( $2 ) }'`
+  done > $TMPIPADDR
 # max ip found + 1 
 YRANGE=`wc -l $TMPIPADDR | $AWK '{ print ( "[0.8:" $1 + 1 "]" ) }'`
 TITLE1=`cat $TMPIPADDR  | $AWK '{ print ( $2 ":" , $1 ) }' | tr "\n" " "`
 # find the DNS name for each host 
 TMP1=`cat $TMPIPADDR | \
-while read IP INDEX
+while read IP INDEX NAM
   do 
     if test -z "$NAM"
       then
