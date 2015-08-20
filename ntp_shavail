@@ -132,7 +132,15 @@ TITLE1=`cat $TMPIPADDR  | $AWK '{ print ( $2 ":" , $1 ) }' | tr "\n" " "`
 TMP1=`cat $TMPIPADDR | \
 while read IP INDEX
   do 
-    getent hosts $IP | $AWK -v INDEX=$INDEX '{ print ( INDEX ":" , $2 , " " ) }'
+    if test -z "$NAM"
+      then
+        case "$IP" in
+          127.127.22.* ) echo "$INDEX: PPS " ;;
+          127.127.28.* ) echo "$INDEX: GPS " ;;
+        esac
+      else
+        getent hosts $IP | $AWK -v INDEX=$INDEX '{ print ( INDEX ":" , $2 , " " ) }'
+    fi
   done `
 # now remove the line breaks 
 TITLE2=`echo $TMP1` 
