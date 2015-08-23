@@ -2,10 +2,11 @@
 
 # Sat Aug 15 13:33:59 CEST 2015
 # Wednesday, August 19, 2015 03:42:24 PM CEST - mayer 
+# Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
-export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR
+export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT
 
 AWK=gawk
 YEAR=`TZ=GMT date '+%Y'`
@@ -17,11 +18,11 @@ STERM="set term x11 persist"
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2015 08 19 "
+    echo "show NTP available peers as graph  - v 2015 08 23 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -D ] [ -f IMG ] DATE "
-    echo "       date is MMDD in year $YEAR or YYYYMMDD or . ( . is today ) "
+    echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) " 
     echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
     echo "       -D          - debug "
     echo
@@ -29,6 +30,7 @@ thisusage(){
 }
 
 # check the arguments
+LOOPCNT=0
 # go at least 1 time into the loop / there is no do until
 do_once=1
 while test $# -gt $MINARGS -o do_once -eq 1
@@ -43,6 +45,13 @@ while test $# -gt $MINARGS -o do_once -eq 1
       -* ) thisusage ; exit 1 ;;
     esac
     if test $# -lt $MINARGS
+      then
+        thisusage
+        exit 1
+    fi
+    LOOPCNT=$((LOOPCNT+1))
+    # check if we are not running into an endless loop
+    if test "$LOOPCNT" -gt 30
       then
         thisusage
         exit 1
@@ -66,6 +75,7 @@ case "$MDATE" in
   [12][90][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?] )
         SELDATE=$MDATE ;;
   \. )  SELDATE=`TZ=GMT date +%Y%m%d` ;;
+  - )   SELDATE=`TZ=GMT+24 date +%Y%m%d` ;;
   * )   echo $0: wrong date format - must be MMDD or . 1>&2
         thisusage
         exit 1

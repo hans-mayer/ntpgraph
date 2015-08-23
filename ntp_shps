@@ -9,10 +9,11 @@
 # Sat Jun 27 07:39:59 CEST 2015 - mayer - min max -m 
 # Sun Jul 26 21:29:54 CEST 2015 - mayer - bugfix 
 # Sun Aug 16 14:44:04 CEST 2015 - mayer - bugfix $AWK
+# Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES 
-export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS
+export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT
 
 AWK=gawk
 TIMESPERH=1
@@ -33,11 +34,11 @@ XTICS=1
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2015 08 16 "
+    echo "show NTP peerstats values as graph  - v 2015 08 23 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
     echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE "
-    echo "       date is MMDD in year $YEAR or YYYYMMDD or . ( . is today ) "
+    echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
     echo "       -i          - interval between updates "
     echo "       -a          - print average line "
@@ -60,6 +61,7 @@ thisusage(){
 # no limitation for the y-range , can be overwritten with -y
 YRANGE='[*:*]'
 # check the arguments
+LOOPCNT=0
 # go at least 1 time into the loop / there is no do until 
 do_once=1
 while test $# -gt 2 -o do_once -eq 1
@@ -90,6 +92,13 @@ while test $# -gt 2 -o do_once -eq 1
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt 2
+      then
+        thisusage
+        exit 1
+    fi
+    LOOPCNT=$((LOOPCNT+1))
+    # check if we are not running into an endless loop 
+    if test "$LOOPCNT" -gt 30 
       then
         thisusage
         exit 1
@@ -136,6 +145,7 @@ case "$MDATE" in
   [12][90][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?] )
         SELDATE=$MDATE ;;
   \. )  SELDATE=`TZ=GMT date +%Y%m%d` ;;
+  - )   SELDATE=`TZ=GMT+24 date +%Y%m%d` ;;
   * )   echo $0: wrong date format - must be MMDD or . 1>&2 
 	thisusage
     	exit 1
