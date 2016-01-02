@@ -4,7 +4,7 @@
 
 for UNIX like systems 
 
-ksh scripts using gawk and gnuplot 
+ksh scripts using gawk, gnuplot and gnuplot-x11 
 
 * ntp_shps
 * ntp_shdiff
@@ -85,14 +85,14 @@ the local NTP server is connected with ADSL to the Internet
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2015 07 15
+    show time difference for 2 NTP server - v 2016 01 02
     usage: /usr/local/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date
        date is MMDD in year 2015 or YYYYMMDD or . ( . is today )
        -y range   - low:high, example -0.1:0.1 , default autorange
        -a         - print average line
        -l         - straight line instead of smooth csplines
        -f IMG     - output to file in current working directory - IMG can be jpeg, png, ...
-       -t number  - values per hour
+       -t number  - values per hour, default is 1
        -m value   - maximum time difference - default 1.1
        -D         - debug
 
