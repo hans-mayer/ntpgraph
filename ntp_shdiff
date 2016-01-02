@@ -7,7 +7,7 @@
 # Wednesday, July 15, 2015 10:52:49 PM MEST - mayer 
 # Sun Aug 16 14:44:04 CEST 2015 - mayer - bugfix $AWK 
 # Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop
-
+# Sat Jan  2 19:10:33 CET 2016 - mayer - y-label 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT
 
@@ -30,7 +30,7 @@ XTICS=1
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2015 08 23 "
+    echo "show time difference for 2 NTP server - v 2016 01 02 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date "
@@ -39,7 +39,7 @@ thisusage(){
     echo "       -a         - print average line " 
     echo "       -l         - straight line instead of smooth csplines " 
     echo "       -f IMG     - output to file in current working directory - IMG can be jpeg, png, ... "
-    echo "       -t number  - values per hour  "
+    echo "       -t number  - values per hour, default is 1  "
     echo "       -m value   - maximum time difference - default 1.1  "
     echo "       -D         - debug "
     echo 
@@ -274,7 +274,7 @@ gnuplot << EOF
   $FILE 
   set title "`uname -n`: $IP1 - $IP2 - $SELDATE \n $HOST1 - $HOST2 $AVG"
   set xlabel "hour"
-  set ylabel "offset"
+  set ylabel "offset (sec)"
   set xtics $XTICS
   # set ytics 10
   set xrange [-0.5:24.8]
