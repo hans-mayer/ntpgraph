@@ -10,10 +10,11 @@
 # Sun Jul 26 21:29:54 CEST 2015 - mayer - bugfix 
 # Sun Aug 16 14:44:04 CEST 2015 - mayer - bugfix $AWK
 # Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop 
+# Mon Jan  4 23:48:56 CET 2016 - mayer - MYIPIS
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES 
-export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT
+export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS
 
 AWK=gawk
 TIMESPERH=1
@@ -78,7 +79,7 @@ while test $# -gt 2 -o do_once -eq 1
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
       -s ) DTYPE=s ; shift ;;
       -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ;;
-      -o ) DTYPE=o ; LINES="" ; YLBL=offset ; shift ;;
+      -o ) DTYPE=o ; LINES="" ; YLBL='offset (sec)' ; shift ;;
       -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ;;
       -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ;;
       -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ;;
@@ -320,13 +321,22 @@ fi
 
 : exit 0 
 
+# what's my IP 
+type ip > /dev/null 2>&1 
+if test $? -eq 0 
+  then 
+    MYIPIS="`uname -n`/`ip route get 244.0.0.0 | head -1 | $AWK '{ print $7 }'`"
+  else 
+    MYIPIS="`uname -n`"
+fi
+
 HOST1=`getent hosts $IP1 | $AWK '{ print $2 }'`
 # if reverse lookup does not work take the IP
 if test -z "$HOST1"
   then
-    TITLE="`uname -n` - $IP1 - $SELDATE "
+    TITLE="$MYIPIS - $IP1 - $SELDATE "
   else 
-    TITLE="`uname -n` - $IP1 - $HOST1 - $SELDATE "
+    TITLE="$MYIPIS - $IP1 - $HOST1 - $SELDATE "
 fi
 
 gnuplot << EOF
