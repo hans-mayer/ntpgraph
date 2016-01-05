@@ -11,10 +11,11 @@
 # Sun Aug 16 14:44:04 CEST 2015 - mayer - bugfix $AWK
 # Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop 
 # Mon Jan  4 23:48:56 CET 2016 - mayer - MYIPIS
+# Wed Jan  6 00:08:03 CET 2016 - mayer - x-range 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES 
-export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS
+export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 
 AWK=gawk
 TIMESPERH=1
@@ -45,6 +46,7 @@ thisusage(){
     echo "       -a          - print average line "
     echo "       -l          - straight line instead of smooth csplines "
     echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
+    echo "       -x range    - low:high, example 1:10 , default autorange -0.5:24.8 "
     echo "       -y range    - low:high, example -0.1:0.1 , default autorange "
     echo "       -c value    - y-axis is number and not percent "
     echo "       -t value    - timestemps per hour - default 1 "
@@ -59,6 +61,8 @@ thisusage(){
     exit 1
 }
 
+# no limitation for the x-range , can be overwritten with -y
+XRANGE='[-0.5:24.8]'
 # no limitation for the y-range , can be overwritten with -y
 YRANGE='[*:*]'
 # check the arguments
@@ -74,6 +78,7 @@ while test $# -gt 2 -o do_once -eq 1
            YLBL=count 
            shift ;; 
       -l ) LINES="with lines" ; shift ;;
+      -x ) XRANGE="[$2]" ; shift ; shift ;;
       -y ) YRANGE="[$2]" ; shift ; shift ;;
       -p ) POLL=$2 ; shift ; shift ;;
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
@@ -347,10 +352,7 @@ gnuplot << EOF
   set ylabel "$YLBL"
   set xtics $XTICS
   # set ytics 10
-  set xrange [-0.5:24.8]
-  # set yrange [0:*]
-  # set yrange [0:60]
-  # set yrange [-1:109]
+  set xrange $XRANGE
   set yrange $YRANGE
   set style line 1 linewidth $LINEWIDTH
   set style line 2 linewidth $LINEWIDTH
