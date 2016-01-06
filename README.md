@@ -17,16 +17,18 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2015 07 26
+
+    show NTP peerstats values as graph  - v 2016 01 06
       author: ntpgraph@ma.yer.at
 
-    usage: /opt/iiasa/bin/ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE
-       date is MMDD in year 2015 or YYYYMMDD or . ( . is today )
+    usage: ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -x range ][ -y range ] [ -f IMG ] IP DATE
+       date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
        -s          - success rate
        -i          - interval between updates
        -a          - print average line
        -l          - straight line instead of smooth csplines
        -f IMG      - output to file - IMG can be jpeg, png, ...
+       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8
        -y range    - low:high, example -0.1:0.1 , default autorange
        -c value    - y-axis is number and not percent
        -t value    - timestemps per hour - default 1
@@ -37,6 +39,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
        -d          - show dispersion - column 7
        -j          - show rms jitter - column 8
        -D          - debug
+
 
 ### examples 
 

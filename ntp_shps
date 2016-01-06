@@ -14,7 +14,7 @@
 # Wed Jan  6 00:08:03 CET 2016 - mayer - x-range 
 
 
-export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES 
+export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 
 AWK=gawk
@@ -32,21 +32,22 @@ DEBUG=n
 STERM="set term x11 persist"
 LINEWIDTH=2
 XTICS=1
+SHOWOPT=""
 
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2015 08 23 "
+    echo "show NTP peerstats values as graph  - v 2016 01 06 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -y range ] [ -f IMG ] IP DATE "
+    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -x range ][ -y range ] [ -f IMG ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
     echo "       -i          - interval between updates "
     echo "       -a          - print average line "
     echo "       -l          - straight line instead of smooth csplines "
     echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
-    echo "       -x range    - low:high, example 1:10 , default autorange -0.5:24.8 "
+    echo "       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8 "
     echo "       -y range    - low:high, example -0.1:0.1 , default autorange "
     echo "       -c value    - y-axis is number and not percent "
     echo "       -t value    - timestemps per hour - default 1 "
@@ -78,8 +79,8 @@ while test $# -gt 2 -o do_once -eq 1
            YLBL=count 
            shift ;; 
       -l ) LINES="with lines" ; shift ;;
-      -x ) XRANGE="[$2]" ; shift ; shift ;;
-      -y ) YRANGE="[$2]" ; shift ; shift ;;
+      -x ) XRANGE="[$2]" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
+      -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
       -p ) POLL=$2 ; shift ; shift ;;
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
       -s ) DTYPE=s ; shift ;;
@@ -347,7 +348,7 @@ fi
 gnuplot << EOF
   $STERM
   $FILE
-  set title "$TITLE $AVG"
+  set title "$TITLE $AVG\n$SHOWOPT"
   set xlabel "hour"
   set ylabel "$YLBL"
   set xtics $XTICS
