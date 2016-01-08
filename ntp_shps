@@ -12,6 +12,7 @@
 # Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop 
 # Mon Jan  4 23:48:56 CET 2016 - mayer - MYIPIS
 # Wed Jan  6 00:08:03 CET 2016 - mayer - x-range 
+# Fri Jan  8 23:29:38 CET 2016 - mayer - line width 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
@@ -37,10 +38,10 @@ SHOWOPT=""
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2016 01 06 "
+    echo "show NTP peerstats values as graph  - v 2016 01 08 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -x range ][ -y range ] [ -f IMG ] IP DATE "
+    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -f IMG ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
     echo "       -i          - interval between updates "
@@ -52,6 +53,7 @@ thisusage(){
     echo "       -c value    - y-axis is number and not percent "
     echo "       -t value    - timestemps per hour - default 1 "
     echo "       -p value    - poll interval used for calculation "
+    echo "       -w value    - line width "
     echo "       -m min max  - minimum and maximum values for calculation, only for options below "
     echo "       -o          - show offset - column 5 "
     echo "       -r          - show roundtrip delay - column 6 "
@@ -96,6 +98,7 @@ while test $# -gt 2 -o do_once -eq 1
            XTICS=2
            echo $FILE ; shift ; shift ;;
       -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ;; 
+      -w ) LINEWIDTH=$2 ; shift ; shift ;; 
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt 2
