@@ -11,7 +11,7 @@
 # Sun Jan 10 09:38:23 CET 2016 - mayer - x-range 
 
 
-export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT
+export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
 export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE 
 
 AWK=gawk
@@ -280,7 +280,9 @@ fi
 if test -n "$FFIT"
   then 
     UNWFIT="fit line(x) \"$LIST\" via y0, m"
+    LOGFIT="set fit logfile \"/tmp/fit.log.$$\""
 fi 
+FIT_LOG=/tmp/fit.log.$$
 
 gnuplot << EOF
   $TERM
@@ -296,6 +298,7 @@ gnuplot << EOF
   set style line 2 linewidth 1
   set dummy x, y
   line(x) = y0 + m*x 
+  $LOGFIT
   $XFIT
   $YFIT 
   $UNWFIT
@@ -310,11 +313,12 @@ EOF
 
 if test "$DEBUG" == y
   then
+    ls -l $FIT_LOG
     echo STATSDIR $STATSDIR PEERSTATS ${PEERSTATS}.$SELDATE
     echo plotfile: $LIST
     echo "$AVG "
   else
-    rm -f $LIST
+    rm -f $LIST $FIT_LOG
 fi
 
 exit 0 
