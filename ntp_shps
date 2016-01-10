@@ -13,10 +13,13 @@
 # Mon Jan  4 23:48:56 CET 2016 - mayer - MYIPIS
 # Wed Jan  6 00:08:03 CET 2016 - mayer - x-range 
 # Fri Jan  8 23:29:38 CET 2016 - mayer - line width 
+# Sun Jan 10 17:50:35 CET 2016 - mayer - fit 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
+export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
+
 
 AWK=gawk
 TIMESPERH=1
@@ -38,10 +41,10 @@ SHOWOPT=""
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2016 01 08 "
+    echo "show NTP peerstats values as graph  - v 2016 01 10 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -f IMG ] IP DATE "
+    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F x y ] [ -f IMG ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
     echo "       -i          - interval between updates "
@@ -59,6 +62,7 @@ thisusage(){
     echo "       -r          - show roundtrip delay - column 6 "
     echo "       -d          - show dispersion - column 7 "
     echo "       -j          - show rms jitter - column 8 "
+    echo "       -F x y      - fit function with x- and y-start value , must be != 0 " 
     echo "       -D          - debug "
     echo 
     exit 1
@@ -99,6 +103,7 @@ while test $# -gt 2 -o do_once -eq 1
            echo $FILE ; shift ; shift ;;
       -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ;; 
       -w ) LINEWIDTH=$2 ; shift ; shift ;; 
+      -F ) XFIT="m = $2" ; YFIT="y0 = $3" ; shift ; shift ; shift ; FFIT=', line(x) ' ;;
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt 2
@@ -348,6 +353,13 @@ if test -z "$HOST1"
     TITLE="$MYIPIS - $IP1 - $HOST1 - $SELDATE "
 fi
 
+if test -n "$FFIT"
+  then
+    UNWFIT="fit line(x) \"$LIST\" via y0, m"
+    LOGFIT="set fit logfile \"/tmp/fit.log.$$\""
+fi
+FIT_LOG=/tmp/fit.log.$$
+
 gnuplot << EOF
   $STERM
   $FILE
@@ -360,9 +372,15 @@ gnuplot << EOF
   set yrange $YRANGE
   set style line 1 linewidth $LINEWIDTH
   set style line 2 linewidth $LINEWIDTH
+  set dummy x, y
+  line(x) = y0 + m*x
+  $LOGFIT
+  $XFIT
+  $YFIT
+  $UNWFIT
   # set style line 1 linecolor rgb "blue" linewidth 2
   # plot "$LIST" using 1:2 $LINES with linespoints ls 1
-  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE 
+  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT
   # plot "$LIST" using 1:2 with linespoints
   # pause 10
   # plot "$LIST" using 1:2 smooth bezier  with linespoints
@@ -371,10 +389,11 @@ EOF
 
 if test "$DEBUG" == y
   then
+    ls -l $FIT_LOG 
     echo plotfile: $LIST 
     echo "$AVG "
   else 
-    rm -f $LIST
+    rm -f $LIST $FIT_LOG 
 fi
 
 exit 0

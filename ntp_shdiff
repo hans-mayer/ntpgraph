@@ -39,7 +39,7 @@ thisusage(){
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F x y ] IP1 IP2 date "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
-    echo "       -x range    - low:high, example 1:10 , default autorange -0.5:24.8 "
+    echo "       -x range   - low:high, example 1:10 , default autorange -0.5:24.8 "
     echo "       -y range   - low:high, example -0.1:0.1 , default autorange " 
     echo "       -a         - print average line " 
     echo "       -l         - straight line instead of smooth csplines " 
