@@ -11,7 +11,7 @@
 # Sun Jan 10 09:38:23 CET 2016 - mayer - x-range 
 
 
-export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE 
+export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT
 export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE 
 
 AWK=gawk
@@ -37,7 +37,7 @@ thisusage(){
     echo "show time difference for 2 NTP server - v 2016 01 10 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
-    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date "
+    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F x y ] IP1 IP2 date "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -x range    - low:high, example 1:10 , default autorange -0.5:24.8 "
     echo "       -y range   - low:high, example -0.1:0.1 , default autorange " 
@@ -46,6 +46,7 @@ thisusage(){
     echo "       -f IMG     - output to file in current working directory - IMG can be jpeg, png, ... "
     echo "       -t number  - values per hour, default is 1  "
     echo "       -m value   - maximum time difference - default 1.1  "
+    echo "       -F x y     - fit function with x- and y-start value , must be != 0 "
     echo "       -D         - debug "
     echo 
     exit 1
@@ -82,6 +83,7 @@ while test $# -gt 3 -o do_once -eq 1
       -l ) LINES="with lines" ; shift ;;
       -D ) DEBUG=y ; shift ;;
       -m ) MAXTIMEDIFF=$2 ; shift ; shift ;; 
+      -F ) XFIT="m = $2" ; YFIT="y0 = $3" ; shift ; shift ; shift ; FFIT=', line(x) ' ;; 
     esac 
     if test $# -lt 3 
       then 
@@ -275,6 +277,11 @@ if test ! -s "$LIST"
     exit 1 
 fi 
 
+if test -n "$FFIT"
+  then 
+    UNWFIT="fit line(x) \"$LIST\" via y0, m"
+fi 
+
 gnuplot << EOF
   $TERM
   $FILE 
@@ -287,9 +294,14 @@ gnuplot << EOF
   set yrange $YRANGE
   set style line 1 linewidth 2
   set style line 2 linewidth 1
+  set dummy x, y
+  line(x) = y0 + m*x 
+  $XFIT
+  $YFIT 
+  $UNWFIT
   # set style line 1 linecolor rgb "blue" linewidth 2
   # plot "$LIST" using 1:2 $LINES with linespoints ls 1
-  plot "$LIST" using 1:2 title 'offset' $LINES ls 1 $AVGLINE
+  plot "$LIST" using 1:2 title 'offset' $LINES ls 1 $AVGLINE $FFIT 
   # plot "$LIST" using 1:2 with linespoints
   # pause 10
   # plot "$LIST" using 1:2 smooth bezier  with linespoints
