@@ -9,6 +9,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 * ntp_shps
 * ntp_shdiff
 * ntptconv
+* ntp_shavail
 
 
 ## ntp_shps 
@@ -142,10 +143,36 @@ make the time stamp in various statistic files human readable
 
 example 
 
+without ntptconv 
+
     $ cat /var/log/ntpstats/peerstats.20150725 | grep 0.001142971
     57228 86324.503 192.168.241.190 9024 0.005973466 0.001142971 0.000946181 0.000013892
-      
+
+with ntptconv
+
     $ cat /var/log/ntpstats/peerstats.20150725 | grep 0.001142971 | ntptconv
     57228 23:58:44 192.168.241.190 9024 0.005973466 0.001142971 0.000946181 0.000013892
+
+
+## ntp_shavail 
+
+### usage
+
+    # ntp_shavail
+
+    show NTP available peers as graph  - v 2015 08 23
+      author: ntpgraph@ma.yer.at
+    
+    usage: ntp_shavail [ -D ] [ -f IMG ] DATE
+       date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
+       -f IMG      - output to file - IMG can be jpeg, png, ...
+       -D          - debug
+
+ntp_shavail will show all available NTP server for a given day. On the Y axis one can see all server. For example server #3 ( 192.168.241.190 ) called "blitz". All it's dots are on the base line which is 3.0 - the .0 says "reject". An other example for server #4. It was most of the time a candidate (+) on line 4.4 and sometime a peer (*) on y-value 4.6 <br />
+The symbols ( x - + # o ) have the same meaning as "ntpq" shows.
+
+ntp_shavail -f png .
+
+![](img/plot_19046.png)
 
 
