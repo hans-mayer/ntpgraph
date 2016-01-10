@@ -99,6 +99,10 @@ Important ! The start values must not be zero.
 
 Now you get an additional ( green ) line with function: line(x) = y0 + m*x 
 
+On error output one can directly read the value: m = -1.18075e-05
+
+With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted. 
+
 
 ## ntp_shdiff 
 
