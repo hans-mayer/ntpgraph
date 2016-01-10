@@ -91,9 +91,14 @@ Now move the mouse cursor over a possible start value. In my case x=10 and y=5.9
 
 Run the same command but with option -F. I used additional option -f to generate a .PNG file in the local working directory. 
 
+Important ! The start values must not be zero. 
+
 ###### ntp_shps -o -x 10:18 -F 10 5.9e-4 -f png  127.127.22.0 .
 
 ![](img/plot_27188.png) 
+
+Now you get an additional ( green ) line with function: line(x) = y0 + m*x 
+
 
 ## ntp_shdiff 
 
