@@ -8,8 +8,11 @@
 # Sun Aug 16 14:44:04 CEST 2015 - mayer - bugfix $AWK 
 # Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop
 # Sat Jan  2 19:10:33 CET 2016 - mayer - y-label 
+# Sun Jan 10 09:38:23 CET 2016 - mayer - x-range 
 
-export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT
+
+export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE 
+export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE 
 
 AWK=gawk
 # default one point per hour 
@@ -26,15 +29,17 @@ LINES="smooth csplines"
 MAXTIMEDIFF=1.1
 LINEWIDTH=2
 XTICS=1
+XRANGE='[-0.5:24.8]'
 
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2016 01 02 "
+    echo "show time difference for 2 NTP server - v 2016 01 10 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
+    echo "       -x range    - low:high, example 1:10 , default autorange -0.5:24.8 "
     echo "       -y range   - low:high, example -0.1:0.1 , default autorange " 
     echo "       -a         - print average line " 
     echo "       -l         - straight line instead of smooth csplines " 
@@ -66,6 +71,7 @@ while test $# -gt 3 -o do_once -eq 1
     do_once=0
     case $1 in 
       -t ) TIMESPERH=$2 ; shift ; shift ;; 
+      -x ) XRANGE="[$2]" ; shift ; shift ;;
       -y ) YRANGE="[$2]" ; shift ; shift ;; 
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' $LINES ls 2 " ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" " 
@@ -277,10 +283,7 @@ gnuplot << EOF
   set ylabel "offset (sec)"
   set xtics $XTICS
   # set ytics 10
-  set xrange [-0.5:24.8]
-  # set yrange [0:*]
-  # set yrange [0:60]
-  # set yrange [-1:109]
+  set xrange $XRANGE
   set yrange $YRANGE
   set style line 1 linewidth 2
   set style line 2 linewidth 1
