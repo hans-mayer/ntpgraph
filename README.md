@@ -17,11 +17,10 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-
-    show NTP peerstats values as graph  - v 2016 01 06
+    show NTP peerstats values as graph  - v 2016 01 08
       author: ntpgraph@ma.yer.at
-
-    usage: ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -x range ][ -y range ] [ -f IMG ] IP DATE
+    
+    usage: ./ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -f IMG ] IP DATE
        date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
        -s          - success rate
        -i          - interval between updates
@@ -33,6 +32,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
        -c value    - y-axis is number and not percent
        -t value    - timestemps per hour - default 1
        -p value    - poll interval used for calculation
+       -w value    - line width
        -m min max  - minimum and maximum values for calculation, only for options below
        -o          - show offset - column 5
        -r          - show roundtrip delay - column 6
@@ -65,7 +65,7 @@ adding the option -l gives sometimes better results
 
 #### interval between updates for a DCF receiver 
 
-if all datagrams are received all intervals are 64 seconds 
+if all data-grams are received all intervals are 64 seconds 
 this gives an indication how well the receiver performs 
 
 ###### ntp_shps -a -i -f png -y -50:300 127.127.8.0 0723
@@ -73,7 +73,7 @@ this gives an indication how well the receiver performs
 ![](img/plot_22693.png)
 
 
-#### roundtrip delay between a remote peer and the local server 
+#### round-trip delay between a remote peer and the local server 
 
 the local NTP server is connected with ADSL to the Internet 
 
@@ -81,6 +81,19 @@ the local NTP server is connected with ADSL to the Internet
 
 ![](img/plot_7266.png)
 
+#### using the FIT function to interpolate the measured values 
+
+First run the command without -F option to get start values for x and y. For example for a time frame between 10 and 18 o'clock. 
+
+ntp_shps -o -x 10:18 127.127.22.0 . 
+
+Now move the mouse cursor over a possible start value. In my case x=10 and y=5.9e-4 
+
+Run the same command but with option -F. I used additional option -f to generate a .PNG file in the local working directory. 
+
+###### ntp_shps -o -x 10:18 -F 10 5.9e-4 -f png  127.127.22.0 .
+
+![](plot_27188.png) 
 
 ## ntp_shdiff 
 
@@ -88,15 +101,19 @@ the local NTP server is connected with ADSL to the Internet
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2016 01 02
-    usage: /usr/local/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] IP1 IP2 date
-       date is MMDD in year 2015 or YYYYMMDD or . ( . is today )
+    show time difference for 2 NTP server - v 2016 01 10
+      author: ntpgraph@ma.yer.at
+    
+    usage: ./ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F x y ] IP1 IP2 date
+       date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
+       -x range    - low:high, example 1:10 , default autorange -0.5:24.8
        -y range   - low:high, example -0.1:0.1 , default autorange
        -a         - print average line
        -l         - straight line instead of smooth csplines
        -f IMG     - output to file in current working directory - IMG can be jpeg, png, ...
        -t number  - values per hour, default is 1
        -m value   - maximum time difference - default 1.1
+       -F x y     - fit function with x- and y-start value , must be != 0
        -D         - debug
 
 ### example
@@ -112,7 +129,7 @@ the local NTP server is connected with ADSL to the Internet
 
 #### ntp time convert 
 
-make the time stamp in varios statistic files human readable 
+make the time stamp in various statistic files human readable 
 
 example 
 
