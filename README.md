@@ -17,10 +17,10 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2016 01 08
+    show NTP peerstats values as graph  - v 2016 01 10
       author: ntpgraph@ma.yer.at
     
-    usage: ./ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -f IMG ] IP DATE
+    usage: ./ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F x y ] [ -f IMG ] IP DATE
        date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
        -s          - success rate
        -i          - interval between updates
@@ -38,8 +38,8 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
        -r          - show roundtrip delay - column 6
        -d          - show dispersion - column 7
        -j          - show rms jitter - column 8
+       -F x y      - fit function with x- and y-start value , must be != 0
        -D          - debug
-
 
 ### examples 
 
@@ -93,7 +93,7 @@ Run the same command but with option -F. I used additional option -f to generate
 
 ###### ntp_shps -o -x 10:18 -F 10 5.9e-4 -f png  127.127.22.0 .
 
-![](plot_27188.png) 
+![](img/plot_27188.png) 
 
 ## ntp_shdiff 
 
