@@ -367,6 +367,7 @@ gnuplot << EOF
   set xlabel "hour"
   set ylabel "$YLBL"
   set xtics $XTICS
+  # set format y "%.1s*10^%T" 
   # set ytics 10
   set xrange $XRANGE
   set yrange $YRANGE
@@ -379,7 +380,7 @@ gnuplot << EOF
   $YFIT
   $UNWFIT
   # set style line 1 linecolor rgb "blue" linewidth 2
-  # plot "$LIST" using 1:2 $LINES with linespoints ls 1
+  # plot "$LIST" using 1:(\$2 * 1000 ) title "$YLBL" $LINES ls 1 $AVGLINE $FFIT # fit funktioniert nicht 
   plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT
   # plot "$LIST" using 1:2 with linespoints
   # pause 10
