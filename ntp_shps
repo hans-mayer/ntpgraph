@@ -14,11 +14,12 @@
 # Wed Jan  6 00:08:03 CET 2016 - mayer - x-range 
 # Fri Jan  8 23:29:38 CET 2016 - mayer - line width 
 # Sun Jan 10 17:50:35 CET 2016 - mayer - fit 
+# Fri Feb  5 22:47:37 CET 2016 - mayer - fit ohne prevalue 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
-export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
+export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS
 
 
 AWK=gawk
@@ -37,6 +38,7 @@ STERM="set term x11 persist"
 LINEWIDTH=2
 XTICS=1
 SHOWOPT=""
+LBLPOS=0.95
 
 
 thisusage(){
@@ -44,7 +46,7 @@ thisusage(){
     echo "show NTP peerstats values as graph  - v 2016 02 05 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F ] [ -f IMG ] IP DATE "
+    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F ] [ -L ] [ -f IMG ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
     echo "       -i          - interval between updates "
@@ -57,12 +59,13 @@ thisusage(){
     echo "       -t value    - timestemps per hour - default 1 "
     echo "       -p value    - poll interval used for calculation "
     echo "       -w value    - line width "
-    echo "       -m min max  - minimum and maximum values for calculation, only for options below "
+    echo "       -m min max  - minimum and maximum values for calculation, only for next 4 options below "
     echo "       -o          - show offset - column 5 "
     echo "       -r          - show roundtrip delay - column 6 "
     echo "       -d          - show dispersion - column 7 "
     echo "       -j          - show rms jitter - column 8 "
     echo "       -F          - fit function "
+    echo "       -L          - label at bottom - only for fit function "
     echo "       -D          - debug "
     echo 
     exit 1
@@ -104,6 +107,7 @@ while test $# -gt 2 -o do_once -eq 1
       -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ;; 
       -w ) LINEWIDTH=$2 ; shift ; shift ;; 
       -F ) shift ; FFIT=', line(x) ' ;;
+      -L ) LBLPOS=0.1 ; shift ;; 
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt 2
@@ -381,13 +385,10 @@ gnuplot << EOF
   $XFIT
   $YFIT
   $UNWFIT
+  set label 2 sprintf("y0 = %2.6e \n m = %2.6e",y0,m) left at graph 0.05, graph $LBLPOS
   # set style line 1 linecolor rgb "blue" linewidth 2
   # plot "$LIST" using 1:(\$2 * 1000 ) title "$YLBL" $LINES ls 1 $AVGLINE $FFIT # fit funktioniert nicht 
-  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT
-  # plot "$LIST" using 1:2 with linespoints
-  # pause 10
-  # plot "$LIST" using 1:2 smooth bezier  with linespoints
-  # pause 10
+  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT 
 EOF
 
 if test "$DEBUG" == y
