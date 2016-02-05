@@ -41,10 +41,10 @@ SHOWOPT=""
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2016 01 10 "
+    echo "show NTP peerstats values as graph  - v 2016 02 05 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F x y ] [ -f IMG ] IP DATE "
+    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F ] [ -f IMG ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
     echo "       -i          - interval between updates "
@@ -62,7 +62,7 @@ thisusage(){
     echo "       -r          - show roundtrip delay - column 6 "
     echo "       -d          - show dispersion - column 7 "
     echo "       -j          - show rms jitter - column 8 "
-    echo "       -F x y      - fit function with x- and y-start value , must be != 0 " 
+    echo "       -F          - fit function "
     echo "       -D          - debug "
     echo 
     exit 1
@@ -103,7 +103,7 @@ while test $# -gt 2 -o do_once -eq 1
            echo $FILE ; shift ; shift ;;
       -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ;; 
       -w ) LINEWIDTH=$2 ; shift ; shift ;; 
-      -F ) XFIT="m = $2" ; YFIT="y0 = $3" ; shift ; shift ; shift ; FFIT=', line(x) ' ;;
+      -F ) shift ; FFIT=', line(x) ' ;;
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt 2
@@ -357,6 +357,8 @@ if test -n "$FFIT"
   then
     UNWFIT="fit line(x) \"$LIST\" via y0, m"
     LOGFIT="set fit logfile \"/tmp/fit.log.$$\""
+    YFIT=`head -1 "$LIST" | $AWK '{ print ( "y0 = " , $2 ) }'`
+    XFIT='m = 0.01'
 fi
 FIT_LOG=/tmp/fit.log.$$
 
