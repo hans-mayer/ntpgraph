@@ -18,10 +18,10 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2016 01 10
+    show NTP peerstats values as graph  - v 2016 02 05
       author: ntpgraph@ma.yer.at
-    
-    usage: ./ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F x y ] [ -f IMG ] IP DATE
+
+    usage: ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F ] [ -L ] [ -f IMG ] IP DATE
        date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
        -s          - success rate
        -i          - interval between updates
@@ -34,12 +34,13 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
        -t value    - timestemps per hour - default 1
        -p value    - poll interval used for calculation
        -w value    - line width
-       -m min max  - minimum and maximum values for calculation, only for options below
+       -m min max  - minimum and maximum values for calculation, only for next 4 options below
        -o          - show offset - column 5
        -r          - show roundtrip delay - column 6
        -d          - show dispersion - column 7
        -j          - show rms jitter - column 8
-       -F x y      - fit function with x- and y-start value , must be != 0
+       -F          - fit function
+       -L          - label at bottom - only for fit function
        -D          - debug
 
 ### examples 
@@ -111,20 +112,22 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2016 01 10
+    show time difference for 2 NTP server - v 2016 02 05
       author: ntpgraph@ma.yer.at
-    
-    usage: ./ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F x y ] IP1 IP2 date
+
+    usage: ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F ] [ -L ] IP1 IP2 date
        date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
-       -x range    - low:high, example 1:10 , default autorange -0.5:24.8
+       -x range   - low:high, example 1:10 , default autorange -0.5:24.8
        -y range   - low:high, example -0.1:0.1 , default autorange
        -a         - print average line
        -l         - straight line instead of smooth csplines
        -f IMG     - output to file in current working directory - IMG can be jpeg, png, ...
        -t number  - values per hour, default is 1
        -m value   - maximum time difference - default 1.1
-       -F x y     - fit function with x- and y-start value , must be != 0
+       -F         - fit function
+       -L         - label at bottom - only for fit function
        -D         - debug
+
 
 ### example
 
