@@ -3,6 +3,7 @@
 # Sat Aug 15 13:33:59 CEST 2015
 # Wednesday, August 19, 2015 03:42:24 PM CEST - mayer 
 # Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop
+# Sat Feb  6 20:13:51 CET 2016 - mayer - bugfix for date eq - ( yesterday ) 
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
@@ -18,7 +19,7 @@ STERM="set term x11 persist"
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2015 08 23 "
+    echo "show NTP available peers as graph  - v 2016 02 06 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -D ] [ -f IMG ] DATE "
@@ -42,6 +43,7 @@ while test $# -gt $MINARGS -o do_once -eq 1
            STERM="set terminal $2 size 900,500"
            LINEWIDTH=1
            echo $FILE ; shift ; shift ;;
+      - )  break ;;  # yesterday
       -* ) thisusage ; exit 1 ;;
     esac
     if test $# -lt $MINARGS
@@ -178,7 +180,7 @@ YLABEL='.0 reject  /  .1 x falsetick  /  .3 - outlyer \n.4 + candidate  /  .5 # 
 gnuplot << EOF
   $STERM
   $FILE
-  set title "$TITLE1\n$TITLE2"
+  set title "$SELDATE\n$TITLE1\n$TITLE2"
   set xlabel "hour"
   set ylabel "$YLABEL" 
   set yrange $YRANGE
