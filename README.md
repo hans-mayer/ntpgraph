@@ -18,7 +18,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2016 02 05
+    show NTP peerstats values as graph  - v 2016 02 06
       author: ntpgraph@ma.yer.at
 
     usage: ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F ] [ -L ] [ -f IMG ] IP DATE
@@ -163,7 +163,7 @@ with ntptconv
 
     # ntp_shavail
 
-    show NTP available peers as graph  - v 2015 08 23
+    show NTP available peers as graph  - v 2016 02 06
       author: ntpgraph@ma.yer.at
     
     usage: ntp_shavail [ -D ] [ -f IMG ] DATE
