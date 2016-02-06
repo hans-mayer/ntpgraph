@@ -10,10 +10,11 @@
 # Sat Jan  2 19:10:33 CET 2016 - mayer - y-label 
 # Sun Jan 10 09:38:23 CET 2016 - mayer - x-range 
 # Fri Feb  5 22:47:37 CET 2016 - mayer - fit ohne prevalue
+# Sat Feb  6 19:43:12 CET 2016 - mayer - bugfix for label function 
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
-export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS
+export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL
 
 AWK=gawk
 # default one point per hour 
@@ -36,7 +37,7 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2016 02 05 "
+    echo "show time difference for 2 NTP server - v 2016 02 06 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F ] [ -L ] IP1 IP2 date "
@@ -282,12 +283,15 @@ if test ! -s "$LIST"
     exit 1 
 fi 
 
+y0=0.0 
 if test -n "$FFIT"
   then 
     UNWFIT="fit line(x) \"$LIST\" via y0, m"
     LOGFIT="set fit logfile \"/tmp/fit.log.$$\""
     YFIT=`head -1 "$LIST" | $AWK '{ print ( "y0 = " , $2 ) }'`
     XFIT='m = 0.01'
+    LINEX='line(x) = y0 + m*x' 
+    SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e\",y0,m) left at graph 0.05, graph $LBLPOS" 
 fi 
 FIT_LOG=/tmp/fit.log.$$
 
@@ -304,20 +308,21 @@ gnuplot << EOF
   set style line 1 linewidth 2
   set style line 2 linewidth 1
   set dummy x, y
-  line(x) = y0 + m*x 
+  $LINEX
   $LOGFIT
   $XFIT
   $YFIT 
   $UNWFIT
-  set label 2 sprintf("y0 = %2.6e \n m = %2.6e",y0,m) left at graph 0.05, graph $LBLPOS
-  # set style line 1 linecolor rgb "blue" linewidth 2
-  # plot "$LIST" using 1:2 $LINES with linespoints ls 1
+  $SETLBL
   plot "$LIST" using 1:2 title 'offset' $LINES ls 1 $AVGLINE $FFIT 
 EOF
 
 if test "$DEBUG" == y
   then
-    ls -l $FIT_LOG
+    if test -f $FIT_LOG 
+      then
+        ls -l $FIT_LOG
+    fi
     echo STATSDIR $STATSDIR PEERSTATS ${PEERSTATS}.$SELDATE
     echo plotfile: $LIST
     echo "$AVG "
