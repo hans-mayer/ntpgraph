@@ -112,7 +112,7 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2016 02 05
+    show time difference for 2 NTP server - v 2016 02 06
       author: ntpgraph@ma.yer.at
 
     usage: ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F ] [ -L ] IP1 IP2 date
