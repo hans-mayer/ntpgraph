@@ -11,10 +11,12 @@
 # Sun Jan 10 09:38:23 CET 2016 - mayer - x-range 
 # Fri Feb  5 22:47:37 CET 2016 - mayer - fit ohne prevalue
 # Sat Feb  6 19:43:12 CET 2016 - mayer - bugfix for label function 
+# Mon Feb  8 20:51:40 CET 2016 - mayer - polynomfunktion ersten u zweiten grades 
+
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
-export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL
+export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN
 
 AWK=gawk
 # default one point per hour 
@@ -37,10 +39,10 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2016 02 06 "
+    echo "show time difference for 2 NTP server - v 2016 02 08 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
-    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F ] [ -L ] IP1 IP2 date "
+    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -x range   - low:high, example 1:10 , default autorange -0.5:24.8 "
     echo "       -y range   - low:high, example -0.1:0.1 , default autorange " 
@@ -49,7 +51,7 @@ thisusage(){
     echo "       -f IMG     - output to file in current working directory - IMG can be jpeg, png, ... "
     echo "       -t number  - values per hour, default is 1  "
     echo "       -m value   - maximum time difference - default 1.1  "
-    echo "       -F         - fit function "
+    echo "       -F n       - fit function, n polynomial (1,2) "
     echo "       -L         - label at bottom - only for fit function "
     echo "       -D         - debug "
     echo 
@@ -87,7 +89,7 @@ while test $# -gt 3 -o do_once -eq 1
       -l ) LINES="with lines" ; shift ;;
       -D ) DEBUG=y ; shift ;;
       -m ) MAXTIMEDIFF=$2 ; shift ; shift ;; 
-      -F ) shift ; FFIT=', line(x) ' ;; 
+      -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ;; 
       -L ) LBLPOS=0.1 ; shift ;;
       -* ) thisusage ; exit 1 ;;
     esac 
@@ -286,12 +288,26 @@ fi
 y0=0.0 
 if test -n "$FFIT"
   then 
-    UNWFIT="fit line(x) \"$LIST\" via y0, m"
     LOGFIT="set fit logfile \"/tmp/fit.log.$$\""
     YFIT=`head -1 "$LIST" | $AWK '{ print ( "y0 = " , $2 ) }'`
-    XFIT='m = 0.01'
-    LINEX='line(x) = y0 + m*x' 
-    SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e\",y0,m) left at graph 0.05, graph $LBLPOS" 
+    case "$POLYN" in
+      1 ) 
+    	UNWFIT="fit line(x) \"$LIST\" via y0, m"
+    	XFIT='m = 0.01'
+    	LINEX='line(x) = y0 + m*x' 
+    	SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e\",y0,m) left at graph 0.05, graph $LBLPOS" 
+	;;
+      2 ) 
+    	UNWFIT="fit line(x) \"$LIST\" via y0, m, n"
+    	XFIT='m = 0.01 ; n = 0.01 '
+    	LINEX='line(x) = y0 + m*x + n*x*x' 
+    	SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e \n n = %2.6e \",y0,m,n) left at graph 0.05, graph $LBLPOS" 
+	;;
+      * ) 
+        thisusage
+        exit 1
+	;;
+    esac
 fi 
 FIT_LOG=/tmp/fit.log.$$
 
