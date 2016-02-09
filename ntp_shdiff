@@ -12,6 +12,7 @@
 # Fri Feb  5 22:47:37 CET 2016 - mayer - fit ohne prevalue
 # Sat Feb  6 19:43:12 CET 2016 - mayer - bugfix for label function 
 # Mon Feb  8 20:51:40 CET 2016 - mayer - polynomfunktion ersten u zweiten grades 
+# Tue Feb  9 21:37:19 CET 2016 - mayer - y-axis format
 
 
 
@@ -39,7 +40,7 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2016 02 08 "
+    echo "show time difference for 2 NTP server - v 2016 02 09 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date "
@@ -323,6 +324,7 @@ gnuplot << EOF
   set yrange $YRANGE
   set style line 1 linewidth 2
   set style line 2 linewidth 1
+  set format y "%8.6f"
   set dummy x, y
   $LINEX
   $LOGFIT

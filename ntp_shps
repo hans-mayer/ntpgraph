@@ -17,12 +17,13 @@
 # Fri Feb  5 22:47:37 CET 2016 - mayer - fit ohne prevalue 
 # Sat Feb  6 20:24:46 CET 2016 - mayer - maybe bugfix 
 # Mon Feb  8 20:51:40 CET 2016 - mayer - polynomfunktion ersten u zweiten grades
+# Tue Feb  9 21:37:19 CET 2016 - mayer - y-axis format 
 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
-export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN
+export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY
 
 
 AWK=gawk
@@ -46,7 +47,7 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2016 02 08 "
+    echo "show NTP peerstats values as graph  - v 2016 02 09 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
     echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] IP DATE "
@@ -97,10 +98,10 @@ while test $# -gt 2 -o do_once -eq 1
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
       -s ) DTYPE=s ; shift ;;
       -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ;;
-      -o ) DTYPE=o ; LINES="" ; YLBL='offset (sec)' ; shift ;;
+      -o ) DTYPE=o ; LINES="" ; YLBL='offset (sec)' ; shift ; FORMATY='set format y "%8.6f"' ;;
       -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ;;
       -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ;;
-      -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ;;
+      -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ; FORMATY='set format y "%8.6f"' ;;
       -D ) DEBUG=y ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2"
@@ -398,6 +399,7 @@ gnuplot << EOF
   set yrange $YRANGE
   set style line 1 linewidth $LINEWIDTH
   set style line 2 linewidth $LINEWIDTH
+  $FORMATY
   set dummy x, y
   $LINEX
   $LOGFIT

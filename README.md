@@ -18,7 +18,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2016 02 08
+    show NTP peerstats values as graph  - v 2016 02 09
       author: ntpgraph@ma.yer.at
 
     usage: ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] IP DATE
@@ -112,7 +112,7 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2016 02 08
+    show time difference for 2 NTP server - v 2016 02 09
       author: ntpgraph@ma.yer.at
 
     usage: ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date
