@@ -18,12 +18,13 @@
 # Sat Feb  6 20:24:46 CET 2016 - mayer - maybe bugfix 
 # Mon Feb  8 20:51:40 CET 2016 - mayer - polynomfunktion ersten u zweiten grades
 # Tue Feb  9 21:37:19 CET 2016 - mayer - y-axis format 
+# Fri Feb 12 21:53:56 CET 2016 - mayer - fit function quiet, print results
 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
-export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY
+export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
 
 
 AWK=gawk
@@ -47,7 +48,7 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2016 02 09 "
+    echo "show NTP peerstats values as graph  - v 2016 02 12 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
     echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] IP DATE "
@@ -379,12 +380,14 @@ if test -n "$FFIT"
     	XFIT='m = 0.01'
     	LINEX='line(x) = y0 + m*x'
     	SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e\",y0,m) left at graph 0.05, graph $LBLPOS"
+	PRRESULT="print \"y0 = \" , y0 ,\"\n m = \" , m "
 	;;
       2 ) 
     	UNWFIT="fit line(x) \"$LIST\" via y0, m, n"
     	XFIT='m = 0.01 ; n = 0.01 '
     	LINEX='line(x) = y0 + m*x + n*x*x'
     	SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e \n n = %2.6e \",y0,m,n) left at graph 0.05, graph $LBLPOS"
+	PRRESULT="print \"y0 = \" , y0 ,\"\n m = \" , m ,\"\n n = \" , n "
 	;;
       * ) 
         thisusage
@@ -407,6 +410,7 @@ gnuplot << EOF
   set yrange $YRANGE
   set style line 1 linewidth $LINEWIDTH
   set style line 2 linewidth $LINEWIDTH
+  set fit quiet
   $FORMATY
   set dummy x, y
   $LINEX
@@ -415,7 +419,8 @@ gnuplot << EOF
   $YFIT
   $UNWFIT
   $SETLBL
-  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT 
+  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT  
+  $PRRESULT
 EOF
 
 if test "$DEBUG" == y
