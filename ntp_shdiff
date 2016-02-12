@@ -13,11 +13,12 @@
 # Sat Feb  6 19:43:12 CET 2016 - mayer - bugfix for label function 
 # Mon Feb  8 20:51:40 CET 2016 - mayer - polynomfunktion ersten u zweiten grades 
 # Tue Feb  9 21:37:19 CET 2016 - mayer - y-axis format
+# Fri Feb 12 21:53:56 CET 2016 - mayer - fit function quiet, print results 
 
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
-export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN
+export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT
 
 AWK=gawk
 # default one point per hour 
@@ -40,7 +41,7 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2016 02 09 "
+    echo "show time difference for 2 NTP server - v 2016 02 12 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date "
@@ -297,12 +298,14 @@ if test -n "$FFIT"
     	XFIT='m = 0.01'
     	LINEX='line(x) = y0 + m*x' 
     	SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e\",y0,m) left at graph 0.05, graph $LBLPOS" 
+	PRRESULT="print \"y0 = \" , y0 ,\"\n m = \" , m " 
 	;;
       2 ) 
     	UNWFIT="fit line(x) \"$LIST\" via y0, m, n"
     	XFIT='m = 0.01 ; n = 0.01 '
     	LINEX='line(x) = y0 + m*x + n*x*x' 
     	SETLBL="set label 2 sprintf(\"y0 = %2.6e \n m = %2.6e \n n = %2.6e \",y0,m,n) left at graph 0.05, graph $LBLPOS" 
+	PRRESULT="print \"y0 = \" , y0 ,\"\n m = \" , m ,\"\n n = \" , n " 
 	;;
       * ) 
         thisusage
@@ -326,6 +329,7 @@ gnuplot << EOF
   set style line 2 linewidth 1
   set format y "%8.6f"
   set dummy x, y
+  set fit quiet
   $LINEX
   $LOGFIT
   $XFIT
@@ -333,6 +337,7 @@ gnuplot << EOF
   $UNWFIT
   $SETLBL
   plot "$LIST" using 1:2 title 'offset' $LINES ls 1 $AVGLINE $FFIT 
+  $PRRESULT
 EOF
 
 if test "$DEBUG" == y
