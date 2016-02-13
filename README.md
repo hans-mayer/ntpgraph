@@ -87,10 +87,11 @@ the local NTP server is connected with ADSL to the Internet
 
 The fit option must have an additional value of 1 or 2 
 
-The functions is for
-
-1: line(x) = y0 + m*x 
+The functions is for <br />
+<pre>
+1: line(x) = y0 + m*x   
 2: line(x) = y0 + m*x + n*x^2
+</pre>
 
 ###### ntp_shps -o -x 10:18 -F 1 -f png  127.127.22.0 .
 
