@@ -19,12 +19,14 @@
 # Mon Feb  8 20:51:40 CET 2016 - mayer - polynomfunktion ersten u zweiten grades
 # Tue Feb  9 21:37:19 CET 2016 - mayer - y-axis format 
 # Fri Feb 12 21:53:56 CET 2016 - mayer - fit function quiet, print results
+# Sat Feb 13 21:59:47 CET 2016 - mayer - show options for -m and -F 
 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
+export UNIQARGCNT
 
 
 AWK=gawk
@@ -44,35 +46,36 @@ LINEWIDTH=2
 XTICS=1
 SHOWOPT=""
 LBLPOS=0.95
+UNIQARGCNT=0 	# unique arguments can apear only once 
 
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2016 02 12 "
+    echo "show NTP peerstats values as graph  - v 2016 02 13 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
     echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
+    echo "       -p value    - poll interval used for calculation of success rate, default 64 "
+    echo "       -c          - y-axis is number and not percent , usefull for success rate "
     echo "       -i          - interval between updates "
     echo "       -a          - print average line "
     echo "       -l          - straight line instead of smooth csplines "
     echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
     echo "       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8 "
     echo "       -y range    - low:high, example -0.1:0.1 , default autorange "
-    echo "       -c value    - y-axis is number and not percent "
     echo "       -t value    - timestemps per hour - default 1 "
-    echo "       -p value    - poll interval used for calculation "
     echo "       -w value    - line width "
     echo "       -m min max  - minimum and maximum values for calculation, only for next 4 options below "
     echo "       -o          - show offset - column 5 "
     echo "       -r          - show roundtrip delay - column 6 "
     echo "       -d          - show dispersion - column 7 "
     echo "       -j          - show rms jitter - column 8 "
-    echo "       -F n        - fit function, n polynomial (1,2)  "
+    echo "       -F n        - fit function, n polynomial ( 1 or 2 )  "
     echo "       -L          - label at bottom - only for fit function "
     echo "       -D          - debug "
-    echo "       -Y string   - y-axis format, example %8.6f " 
+    echo "       -Y string   - y-axis format, example 8.6f " 
     echo 
     exit 1
 }
@@ -95,26 +98,26 @@ while test $# -gt 2 -o do_once -eq 1
            shift ;; 
       -l ) LINES="with lines" ; shift ;;
       -x ) XRANGE="[$2]" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
-      -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
+      -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -y $2" ; shift ; shift ;;
       -p ) POLL=$2 ; shift ; shift ;;
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
-      -s ) DTYPE=s ; shift ;;
-      -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ;;
-      -o ) DTYPE=o ; LINES="" ; YLBL='offset (sec)' ; shift ;;
-      -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ;;
-      -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ;;
-      -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ;;
+      -s ) DTYPE=s ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -o ) DTYPE=o ; LINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -D ) DEBUG=y ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2"
            LINEWIDTH=1
            XTICS=2
            echo $FILE ; shift ; shift ;;
-      -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ;; 
+      -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -m $MIN $MAX" ;; 
       -w ) LINEWIDTH=$2 ; shift ; shift ;; 
-      -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ;;
+      -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;;
       -L ) LBLPOS=0.1 ; shift ;; 
-      -Y ) FORMATY="set format y \"$2\"" ; shift ; shift ;; 
+      -Y ) FORMATY="set format y \"%$2\"" ; shift ; shift ;; 
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt 2
@@ -133,18 +136,29 @@ while test $# -gt 2 -o do_once -eq 1
 
 case $DTYPE in
   x ) 
+    echo 1>&2
     echo "option -s , -o , -d , -r , -j or -i is mandatory " 1>&2 
     thisusage
     exit 1
     ;; 
-  i ) 
+  i|o|d|r|j ) 
     if test CNTONLY -eq 1 
       then 
-        echo "option -c not valid in combination with -i " 1>&2 
+        echo 1>&2
+        echo "option -c not valid in combination with -i, -o, -d, -r or -j " 1>&2 
+        thisusage
         exit 1
     fi
     ;; 
 esac
+
+if test $UNIQARGCNT -ne 1 
+  then
+    echo 1>&2
+    echo "option -s , -o , -d , -r , -j or -i must be unique " 1>&2
+    thisusage
+    exit 1 
+fi
 
 if test $# -eq 2
   then
@@ -404,8 +418,6 @@ gnuplot << EOF
   set xlabel "hour"
   set ylabel "$YLBL"
   set xtics $XTICS
-  # set format y "%.1s*10^%T" 
-  # set ytics 10
   set xrange $XRANGE
   set yrange $YRANGE
   set style line 1 linewidth $LINEWIDTH
@@ -425,7 +437,10 @@ EOF
 
 if test "$DEBUG" == y
   then
-    ls -l $FIT_LOG 
+    if test -f $FIT_LOG
+      then
+        ls -l $FIT_LOG 
+    fi
     echo plotfile: $LIST 
     echo "$AVG "
   else 

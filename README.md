@@ -18,7 +18,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2016 02 12
+    show NTP peerstats values as graph  - v 2016 02 13
       author: ntpgraph@ma.yer.at
 
     usage: ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] IP DATE
@@ -39,7 +39,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
        -r          - show roundtrip delay - column 6
        -d          - show dispersion - column 7
        -j          - show rms jitter - column 8
-       -F n        - fit function, n polynomial (1,2)
+       -F n        - fit function, n polynomial ( 1 or 2 )
        -L          - label at bottom - only for fit function
        -D          - debug
 
@@ -85,17 +85,14 @@ the local NTP server is connected with ADSL to the Internet
 
 #### using the FIT function to interpolate the measured values 
 
-First run the command without -F option to get start values for x and y. For example for a time frame between 10 and 18 o'clock. 
+The fit option must have an additional value of 1 or 2 
 
-ntp_shps -o -x 10:18 127.127.22.0 . 
+The functions is for
 
-Now move the mouse cursor over a possible start value. In my case x=10 and y=5.9e-4 
+1: line(x) = y0 + m*x 
+2: line(x) = y0 + m*x + n*x^2
 
-Run the same command but with option -F. I used additional option -f to generate a .PNG file in the local working directory. 
-
-Important ! The start values must not be zero. 
-
-###### ntp_shps -o -x 10:18 -F 10 5.9e-4 -f png  127.127.22.0 .
+###### ntp_shps -o -x 10:18 -F 1 -f png  127.127.22.0 .
 
 ![](img/plot_27188.png) 
 
@@ -112,7 +109,7 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2016 02 12
+    show time difference for 2 NTP server - v 2016 02 13
       author: ntpgraph@ma.yer.at
 
     usage: ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date
@@ -124,7 +121,7 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
        -f IMG     - output to file in current working directory - IMG can be jpeg, png, ...
        -t number  - values per hour, default is 1
        -m value   - maximum time difference - default 1.1
-       -F n       - fit function, n polynomial (1,2)
+       -F n       - fit function, n polynomial ( 1 or 2 )
        -L         - label at bottom - only for fit function
        -D         - debug
 

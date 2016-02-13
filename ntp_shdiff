@@ -14,11 +14,12 @@
 # Mon Feb  8 20:51:40 CET 2016 - mayer - polynomfunktion ersten u zweiten grades 
 # Tue Feb  9 21:37:19 CET 2016 - mayer - y-axis format
 # Fri Feb 12 21:53:56 CET 2016 - mayer - fit function quiet, print results 
+# Sat Feb 13 22:37:35 CET 2016 - mayer - show options 
 
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
-export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT
+export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
 
 AWK=gawk
 # default one point per hour 
@@ -41,7 +42,7 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2016 02 12 "
+    echo "show time difference for 2 NTP server - v 2016 02 13 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date "
@@ -79,9 +80,9 @@ while test $# -gt 3 -o do_once -eq 1
     : echo argc: $# 
     do_once=0
     case $1 in 
-      -t ) TIMESPERH=$2 ; shift ; shift ;; 
-      -x ) XRANGE="[$2]" ; shift ; shift ;;
-      -y ) YRANGE="[$2]" ; shift ; shift ;; 
+      -t ) TIMESPERH=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -t $TIMESPERH" ;; 
+      -x ) XRANGE="[$2]" ; shift ; shift ; SHOWOPT="$SHOWOPT -x $2 h" ;;
+      -y ) YRANGE="[$2]" ; shift ; shift ; SHOWOPT="$SHOWOPT -y $2" ;; 
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' $LINES ls 2 " ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" " 
            TERM="set terminal $2"
@@ -90,8 +91,8 @@ while test $# -gt 3 -o do_once -eq 1
            echo $FILE ; shift ; shift ;; 
       -l ) LINES="with lines" ; shift ;;
       -D ) DEBUG=y ; shift ;;
-      -m ) MAXTIMEDIFF=$2 ; shift ; shift ;; 
-      -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ;; 
+      -m ) MAXTIMEDIFF=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -m $MAXTIMEDIFF" ;; 
+      -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;; 
       -L ) LBLPOS=0.1 ; shift ;;
       -* ) thisusage ; exit 1 ;;
     esac 
@@ -192,8 +193,6 @@ PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '
 
 DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'`
 : echo 
-: IP1=131.130.251.107
-: IP2=192.168.241.190
 
 # peerstats column 2 are seconds after midnight 
 # myarray enhaelt anzahl gefundenet zeilen pro stunde 
@@ -209,19 +208,24 @@ $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v MAXTIMEDIF
   }
   { TSLOT = int($2/3600*TIMESPERH) ;
     # print ( IP1 , IP1LAST, IP2, IP2LAST, $3, $5  ) ; 
+    # initialisierung 
     if ( ( IP1 == $3 ) && ( IP1LAST == -1 ) ) { 
+      # in diese bedingung faellt man nur einmal 
       # print ( "init IP1 " ) ; 
       IP1LAST = 1 ; 
       TIME1 = $5 ; 
     } ; 
     if ( ( IP2 == $3 ) && ( IP2LAST == -1 ) ) { 
+      # in diese bedingung faellt man nur einmal 
       # print ( "init IP2 " ) ; 
       IP2LAST = 1 ; 
       TIME2 = $5 ; 
     } ; 
+    # wenn die letzte IP die IP1 war und jetzt IP2 gelesen wird 
     if ( ( IP1LAST == 1 ) && ( IP2 == $3 ) ) {
       DIFFTIME = TIME1 - $5 ; 
       if ( ( DIFFTIME < MAXTIMEDIFF ) && ( DIFFTIME > -MAXTIMEDIFF ) ) { 
+        # in myarray wird mitgezaehlt und aufsummiert 
         myarrayC[TSLOT]++ ; 
         myarrayT[TSLOT] += DIFFTIME ; 
         IP1LAST = 0 ; 
@@ -318,7 +322,7 @@ FIT_LOG=/tmp/fit.log.$$
 gnuplot << EOF
   $TERM
   $FILE 
-  set title "`uname -n`: $IP1 - $IP2 - $SELDATE \n $HOST1 - $HOST2 $AVG"
+  set title "`uname -n`: $IP1 - $IP2 - $SELDATE \n $HOST1 - $HOST2 $AVG\n$SHOWOPT"
   set xlabel "hour"
   set ylabel "offset (sec)"
   set xtics $XTICS
