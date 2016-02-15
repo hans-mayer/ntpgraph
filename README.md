@@ -18,30 +18,38 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2016 02 13
+    show NTP peerstats values as graph  - v 2016 02 15
       author: ntpgraph@ma.yer.at
 
-    usage: ntp_shps -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] IP DATE
+    usage: /opt/iiasa/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] IP DATE
        date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
        -s          - success rate
+       -p value    - poll interval used for calculation of success rate, default 64
+       -c          - y-axis is number and not percent , usefull for success rate
        -i          - interval between updates
        -a          - print average line
        -l          - straight line instead of smooth csplines
        -f IMG      - output to file - IMG can be jpeg, png, ...
        -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8
        -y range    - low:high, example -0.1:0.1 , default autorange
-       -c value    - y-axis is number and not percent
        -t value    - timestemps per hour - default 1
-       -p value    - poll interval used for calculation
        -w value    - line width
        -m min max  - minimum and maximum values for calculation, only for next 4 options below
-       -o          - show offset - column 5
-       -r          - show roundtrip delay - column 6
-       -d          - show dispersion - column 7
-       -j          - show rms jitter - column 8
+       -o          - show offset from peerstats file - column 5
+       -r          - show roundtrip delay from peerstats file - column 6
+       -d          - show dispersion from peerstats file - column 7
+       -j          - show rms jitter from peerstats file - column 8
        -F n        - fit function, n polynomial ( 1 or 2 )
-       -L          - label at bottom - only for fit function
-       -D          - debug
+       -b          - label at bottom - only for fit function
+       -Z          - debug
+       -Y string   - y-axis format, example 8.6f
+       -L          - use loopstats file instead of peerstats file
+       -O          - show offset from loopstats file - column 3
+       -D          - show drift compensation from loopstats file - column 4
+       -E          - show estimated error from loopstats file - column 5
+       -S          - show stability from loopstats file - column 6
+       -P          - show polling interval from loopstats file - column 7
+
 
 ### examples 
 
