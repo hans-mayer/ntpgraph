@@ -20,13 +20,14 @@
 # Tue Feb  9 21:37:19 CET 2016 - mayer - y-axis format 
 # Fri Feb 12 21:53:56 CET 2016 - mayer - fit function quiet, print results
 # Sat Feb 13 21:59:47 CET 2016 - mayer - show options for -m and -F 
+# Mon Feb 15 18:35:41 CET 2016 - mayer - loopstats file 
 
 
 
-export DISPLAY DAYS TIMESPERH AWK STATSDIR PEERSTATS LIST CNTONLY YLBL YEAR LINES SHOWOPT
+export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
-export UNIQARGCNT
+export UNIQARGCNT STATSTYPE
 
 
 AWK=gawk
@@ -47,14 +48,14 @@ XTICS=1
 SHOWOPT=""
 LBLPOS=0.95
 UNIQARGCNT=0 	# unique arguments can apear only once 
-
+STATSTYPE=peerstats
 
 thisusage(){
     echo 
-    echo "show NTP peerstats values as graph  - v 2016 02 13 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2016 02 15 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 -s|-i|-o|-d|-r|-j [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] IP DATE "
+    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] IP DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       -s          - success rate "
     echo "       -p value    - poll interval used for calculation of success rate, default 64 "
@@ -68,14 +69,20 @@ thisusage(){
     echo "       -t value    - timestemps per hour - default 1 "
     echo "       -w value    - line width "
     echo "       -m min max  - minimum and maximum values for calculation, only for next 4 options below "
-    echo "       -o          - show offset - column 5 "
-    echo "       -r          - show roundtrip delay - column 6 "
-    echo "       -d          - show dispersion - column 7 "
-    echo "       -j          - show rms jitter - column 8 "
+    echo "       -o          - show offset from peerstats file - column 5 "
+    echo "       -r          - show roundtrip delay from peerstats file - column 6 "
+    echo "       -d          - show dispersion from peerstats file - column 7 "
+    echo "       -j          - show rms jitter from peerstats file - column 8 "
     echo "       -F n        - fit function, n polynomial ( 1 or 2 )  "
-    echo "       -L          - label at bottom - only for fit function "
-    echo "       -D          - debug "
+    echo "       -b          - label at bottom - only for fit function "
+    echo "       -Z          - debug "
     echo "       -Y string   - y-axis format, example 8.6f " 
+    echo "       -L          - use loopstats file instead of peerstats file "
+    echo "       -O          - show offset from loopstats file - column 3 "
+    echo "       -D          - show drift compensation from loopstats file - column 4 "
+    echo "       -E          - show estimated error from loopstats file - column 5 "
+    echo "       -S          - show stability from loopstats file - column 6 "
+    echo "       -P          - show polling interval from loopstats file - column 7 "
     echo 
     exit 1
 }
@@ -107,7 +114,7 @@ while test $# -gt 2 -o do_once -eq 1
       -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -D ) DEBUG=y ; shift ;; 
+      -Z ) DEBUG=y ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2"
            LINEWIDTH=1
@@ -116,8 +123,14 @@ while test $# -gt 2 -o do_once -eq 1
       -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -m $MIN $MAX" ;; 
       -w ) LINEWIDTH=$2 ; shift ; shift ;; 
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;;
-      -L ) LBLPOS=0.1 ; shift ;; 
+      -b ) LBLPOS=0.1 ; shift ;; 
       -Y ) FORMATY="set format y \"%$2\"" ; shift ; shift ;; 
+      -L ) STATSTYPE=loopstats ; shift ;; 
+      -O ) DTYPE=O ; LINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -D ) DTYPE=D ; LINES="" ; YLBL='drift compensation' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -E ) DTYPE=E ; LINES="" ; YLBL='estimated error' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -S ) DTYPE=S ; LINES="" ; YLBL='stability' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -P ) DTYPE=P ; LINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt 2
@@ -242,24 +255,24 @@ if test $POLL -eq -1
     esac 
 fi
 
-# look what is statsdir directory and peerstats file defined  
+# look what is statsdir directory and peerstats or loopstats file defined  
 # awk is needed for solaris to strip off the leading blanks
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
-PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
+STATSFILE=`grep filegen $CONF | grep $STATSTYPE | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
 if test "$DEBUG" == y
   then
     echo CONF $CONF
-    echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS.$SELDATE
+    echo STATSDIR $STATSDIR STATSFILE $STATSFILE.$SELDATE
     echo DAYS=$DAYS TIMESPERH=$TIMESPERH CNTONLY=$CNTONLY POLL=$POLL 
 fi
 
-if test ! -f $STATSDIR/${PEERSTATS}.$SELDATE 
+if test ! -f $STATSDIR/${STATSFILE}.$SELDATE 
   then 
-    echo $0: file $STATSDIR/${PEERSTATS}.$SELDATE not found 
+    echo $0: file $STATSDIR/${STATSFILE}.$SELDATE not found 
     exit 1 
 fi 
 
-DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'` 
+DAYS=`ls  $STATSDIR/${STATSFILE}.$SELDATE | wc -l | $AWK '{ print $1 }'` 
 : echo 
 
 # peerstats column 2 are seconds after midnight 
@@ -268,7 +281,7 @@ DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'`
 if test $DTYPE == s 
   then 
     # show success graph 
-    cat $STATSDIR/$PEERSTATS.$SELDATE | \
+    cat $STATSDIR/$STATSFILE.$SELDATE | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
@@ -291,7 +304,7 @@ fi
 if test $DTYPE == i 
   then 
     # show graph with intervals 
-    cat $STATSDIR/$PEERSTATS.$SELDATE | \
+    cat $STATSDIR/$STATSFILE.$SELDATE | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
@@ -314,7 +327,7 @@ if test $DTYPE == i
       }' > $LIST
 fi
 
-if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r
+if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O -o $DTYPE == D -o $DTYPE == E -o $DTYPE == S -o $DTYPE == P
   then 
     # show offset / delay graph 
     case $DTYPE in 
@@ -322,8 +335,15 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r
       r ) COLUMN=6 ;; 
       d ) COLUMN=7 ;; 
       j ) COLUMN=8 ;; 
+      O ) COLUMN=3 ; IP1=. ;; 
+      D ) COLUMN=4 ; IP1=. ;; 
+      E ) COLUMN=5 ; IP1=. ;; 
+      S ) COLUMN=6 ; IP1=. ;; 
+      P ) COLUMN=7 ; IP1=. ;; 
+      * ) echo "$0: fatal program error " 1>&2 
+	  exit 1 ;; 
     esac 
-    cat $STATSDIR/$PEERSTATS.$SELDATE | \
+    cat $STATSDIR/$STATSFILE.$SELDATE | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
       BEGIN {
@@ -347,7 +367,9 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r
          }
       } 
       END { 
-        AVERAGE /= CNT4INT ; 
+        if ( CNT4INT > 0 ) {
+          AVERAGE /= CNT4INT ; 
+        } ; 
 	for (i = 0 ; i < CNT4INT ; i++ ) 
               printf ( "%.4f %.8f %.8f \n", myarraytime[i], myarrayoffset[i], AVERAGE ) ;
       }' > $LIST
@@ -375,13 +397,19 @@ if test $? -eq 0
     MYIPIS="`uname -n`"
 fi
 
-HOST1=`getent hosts $IP1 | $AWK '{ print $2 }'`
-# if reverse lookup does not work take the IP
-if test -z "$HOST1"
-  then
-    TITLE="$MYIPIS - $IP1 - $SELDATE "
+# IP1 ist . fuer loopstats file 
+if test "$IP1" == '.' 
+  then 
+    TITLE="$MYIPIS $STATSTYPE - $SELDATE "
   else 
-    TITLE="$MYIPIS - $IP1 - $HOST1 - $SELDATE "
+    HOST1=`getent hosts $IP1 | $AWK '{ print $2 }'`
+    # if reverse lookup does not work take the IP
+    if test -z "$HOST1"
+      then
+        TITLE="$MYIPIS $STATSTYPE - $IP1 - $SELDATE "
+      else 
+        TITLE="$MYIPIS $STATSTYPE - $IP1 - $HOST1 - $SELDATE "
+    fi
 fi
 
 if test -n "$FFIT"
