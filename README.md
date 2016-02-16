@@ -21,8 +21,9 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
     show NTP peerstats values as graph  - v 2016 02 15
       author: ntpgraph@ma.yer.at
 
-    usage: /opt/iiasa/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] IP DATE
+    usage: ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATE
        date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
+       IP address  - only for peerstats graph, not for loopstats
        -s          - success rate
        -p value    - poll interval used for calculation of success rate, default 64
        -c          - y-axis is number and not percent , usefull for success rate

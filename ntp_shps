@@ -21,13 +21,14 @@
 # Fri Feb 12 21:53:56 CET 2016 - mayer - fit function quiet, print results
 # Sat Feb 13 21:59:47 CET 2016 - mayer - show options for -m and -F 
 # Mon Feb 15 18:35:41 CET 2016 - mayer - loopstats file 
+# Tue Feb 16 22:53:22 CET 2016 - mayer - bugfix arguments 
 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
-export UNIQARGCNT STATSTYPE
+export UNIQARGCNT STATSTYPE ARGC
 
 
 AWK=gawk
@@ -49,14 +50,16 @@ SHOWOPT=""
 LBLPOS=0.95
 UNIQARGCNT=0 	# unique arguments can apear only once 
 STATSTYPE=peerstats
+ARGC=2		# ip-addr and date for peerstats
 
 thisusage(){
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2016 02 15 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2016 02 16 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] IP DATE "
+    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
+    echo "       IP address  - only for peerstats graph, not for loopstats "
     echo "       -s          - success rate "
     echo "       -p value    - poll interval used for calculation of success rate, default 64 "
     echo "       -c          - y-axis is number and not percent , usefull for success rate "
@@ -95,7 +98,7 @@ YRANGE='[*:*]'
 LOOPCNT=0
 # go at least 1 time into the loop / there is no do until 
 do_once=1
-while test $# -gt 2 -o do_once -eq 1
+while test $# -gt $ARGC -o do_once -eq 1
   do
     do_once=0
     case $1 in
@@ -125,7 +128,7 @@ while test $# -gt 2 -o do_once -eq 1
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;;
       -b ) LBLPOS=0.1 ; shift ;; 
       -Y ) FORMATY="set format y \"%$2\"" ; shift ; shift ;; 
-      -L ) STATSTYPE=loopstats ; shift ;; 
+      -L ) STATSTYPE=loopstats ; shift ; ARGC=1 ;; 
       -O ) DTYPE=O ; LINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -D ) DTYPE=D ; LINES="" ; YLBL='drift compensation' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -E ) DTYPE=E ; LINES="" ; YLBL='estimated error' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
@@ -133,7 +136,7 @@ while test $# -gt 2 -o do_once -eq 1
       -P ) DTYPE=P ; LINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -* ) thisusage ; exit 1 ;; 
     esac
-    if test $# -lt 2
+    if test $# -lt $ARGC
       then
         thisusage
         exit 1
@@ -150,11 +153,11 @@ while test $# -gt 2 -o do_once -eq 1
 case $DTYPE in
   x ) 
     echo 1>&2
-    echo "option -s , -o , -d , -r , -j or -i is mandatory " 1>&2 
+    echo "option -s , -o , -d , -r , -j , -i or -O , -D , -E , -S , -P is mandatory " 1>&2 
     thisusage
     exit 1
     ;; 
-  i|o|d|r|j ) 
+  i|o|d|r|j|O|D|E|S|P ) 
     if test CNTONLY -eq 1 
       then 
         echo 1>&2
@@ -177,19 +180,18 @@ if test $# -eq 2
   then
     IP1=$1
     MDATE=$2
-  else
-    thisusage
-    exit 1
-fi
 
-# very rudimentary check of IP addresses - V4 and V6 
-case "$IP1" in
-  [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;;
-  [1-9]*:* ) ;; 
-  * )   echo $0: bad IP address: "$IP1" 1>&2 
-	thisusage
-        exit 1 ;;
-esac
+    # very rudimentary check of IP addresses - V4 and V6 
+    case "$IP1" in
+      [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;;
+      [1-9]*:* ) ;; 
+      * )   echo $0: bad IP address: "$IP1" 1>&2 
+	    thisusage
+            exit 1 ;;
+    esac
+  else
+    MDATE=$1
+fi
 
 # very rudimentary check of date 
 case "$MDATE" in 
