@@ -119,22 +119,23 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2016 02 24
+    show time difference for 2 NTP server - v 2016 05 09
       author: ntpgraph@ma.yer.at
-
-    usage: ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date
+    
+    usage: /opt/iiasa/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date
        date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
-       -x range   - low:high, example 1:10 , default autorange -0.5:24.8
-       -y range   - low:high, example -0.1:0.1 , default autorange
-       -a         - print average line
-       -l         - straight line instead of smooth csplines
-       -f IMG     - output to file in current working directory - IMG can be jpeg, png, ...
-       -t number  - values per hour, default is 1
-       -m value   - maximum time difference - default 1.1
-       -F n       - fit function, n polynomial ( 1 or 2 )
-       -L         - label at bottom - only for fit function
-       -w value   - line width
-       -D         - debug
+       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours
+       -y range      - low:high, example -0.1:0.1 , default autorange
+       -a            - print average line
+       -l            - straight line instead of smooth csplines
+       -f IMG        - output to file in current working directory - IMG can be jpeg, png, ...
+       -t number     - values per hour for average calculation, default is 1
+       -m value      - maximum time difference - default 1.1 second
+       -c low high   - lower and upper limit to calculate - default 1.1 second
+       -F n          - fit function, n polynomial ( 1 or 2 )
+       -L            - label at bottom - only for fit function
+       -w value      - line width
+       -D            - debug
 
 
 ### example

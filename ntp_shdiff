@@ -17,12 +17,12 @@
 # Sat Feb 13 22:37:35 CET 2016 - mayer - show options 
 # Sun Feb 14 18:04:52 CET 2016 - mayer - array of values with 8 decimal places 
 # Wed Feb 24 21:19:12 CET 2016 - mayer - option w 
-
+# Mon May  9 21:14:42 CEST 2016 - mayer - option c - range for calculation 
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
-export TERM YEAR LINES AVG AVGLINE SELDATE MAXTIMEDIFF LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
-export LINEWIDTH
+export TERM YEAR LINES AVG AVGLINE SELDATE LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
+export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH
 
 AWK=gawk
 # default one point per hour 
@@ -36,7 +36,8 @@ YEAR=`TZ=GMT date '+%Y'`
 # connect the point with curves - changed with option -l 
 LINES="smooth csplines"
 # miximum time difference, values below will be taken for calculation
-MAXTIMEDIFF=1.1
+TIMEDIFFLOW=-1.1
+TIMEDIFFHIGH=1.1
 LINEWIDTH=2
 XTICS=1
 XRANGE='[-0.5:24.8]'
@@ -45,22 +46,23 @@ LBLPOS=0.95
 
 thisusage(){
     echo 
-    echo "show time difference for 2 NTP server - v 2016 02 24 "
+    echo "show time difference for 2 NTP server - v 2016 05 09 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
-    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date "
+    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
-    echo "       -x range   - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours "
-    echo "       -y range   - low:high, example -0.1:0.1 , default autorange " 
-    echo "       -a         - print average line " 
-    echo "       -l         - straight line instead of smooth csplines " 
-    echo "       -f IMG     - output to file in current working directory - IMG can be jpeg, png, ... "
-    echo "       -t number  - values per hour for average calculation, default is 1  "
-    echo "       -m value   - maximum time difference - default 1.1  "
-    echo "       -F n       - fit function, n polynomial ( 1 or 2 ) "
-    echo "       -L         - label at bottom - only for fit function "
-    echo "       -w value   - line width "
-    echo "       -D         - debug "
+    echo "       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours "
+    echo "       -y range      - low:high, example -0.1:0.1 , default autorange " 
+    echo "       -a            - print average line " 
+    echo "       -l            - straight line instead of smooth csplines " 
+    echo "       -f IMG        - output to file in current working directory - IMG can be jpeg, png, ... "
+    echo "       -t number     - values per hour for average calculation, default is 1  "
+    echo "       -m value      - maximum time difference - default 1.1 second "
+    echo "       -c low high   - lower and upper limit to calculate - default 1.1 second "
+    echo "       -F n          - fit function, n polynomial ( 1 or 2 ) "
+    echo "       -L            - label at bottom - only for fit function "
+    echo "       -w value      - line width "
+    echo "       -D            - debug "
     echo 
     exit 1
 }
@@ -95,7 +97,8 @@ while test $# -gt 3 -o do_once -eq 1
            echo $FILE ; shift ; shift ;; 
       -l ) LINES="with lines" ; shift ;;
       -D ) DEBUG=y ; shift ;;
-      -m ) MAXTIMEDIFF=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -m $MAXTIMEDIFF" ;; 
+      -m ) TIMEDIFFLOW=-$2 ; TIMEDIFFHIGH=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -m $TIMEDIFFHIGH" ;; 
+      -c ) TIMEDIFFLOW=$2 ; TIMEDIFFHIGH=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -c $TIMEDIFFLOW $TIMEDIFFHIGH" ;; 
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;; 
       -L ) LBLPOS=0.1 ; shift ;;
       -w ) LINEWIDTH=$2 ; shift ; shift ;;
@@ -196,6 +199,13 @@ STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ 
 PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
 : echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS
 
+# does at least one file exist ? 
+ls $STATSDIR/${PEERSTATS}.$SELDATE > /dev/null 2>&1 
+if test $? -ne 0 
+  then
+    echo $0: $STATSDIR/${PEERSTATS}.$SELDATE not found 
+    exit 1
+fi
 DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'`
 : echo 
 
@@ -203,7 +213,7 @@ DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'`
 # myarray enhaelt anzahl gefundenet zeilen pro stunde 
 : echo $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 
 cat $STATSDIR/$PEERSTATS.$SELDATE | \
-$AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v MAXTIMEDIFF=$MAXTIMEDIFF '
+$AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v TIMEDIFFLOW=$TIMEDIFFLOW -v TIMEDIFFHIGH=$TIMEDIFFHIGH '
   BEGIN {
     # print ( "awk begin " ) ; 
     IP1LAST = -1 ; 
@@ -229,7 +239,8 @@ $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v MAXTIMEDIF
     # wenn die letzte IP die IP1 war und jetzt IP2 gelesen wird 
     if ( ( IP1LAST == 1 ) && ( IP2 == $3 ) ) {
       DIFFTIME = TIME1 - $5 ; 
-      if ( ( DIFFTIME < MAXTIMEDIFF ) && ( DIFFTIME > -MAXTIMEDIFF ) ) { 
+      if ( ( DIFFTIME < TIMEDIFFHIGH ) && ( DIFFTIME > TIMEDIFFLOW ) ) { 
+        # we are within the range where calculation takes place 
         # in myarray wird mitgezaehlt und aufsummiert 
         myarrayC[TSLOT]++ ; 
         myarrayT[TSLOT] += DIFFTIME ; 
@@ -244,7 +255,7 @@ $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v MAXTIMEDIF
     if ( IP2 == $3 ) TIME2 = $5 ; 
     if ( ( IP2LAST == 1 ) && ( IP1 == $3 ) ) {
       DIFFTIME = $5 - TIME2 ; 
-      if ( ( DIFFTIME < MAXTIMEDIFF ) && ( DIFFTIME > -MAXTIMEDIFF ) ) { 
+      if ( ( DIFFTIME < TIMEDIFFHIGH ) && ( DIFFTIME > TIMEDIFFLOW ) ) { 
         myarrayC[TSLOT]++ ; 
         myarrayT[TSLOT] += DIFFTIME ; 
         IP1LAST = 1 ; 
