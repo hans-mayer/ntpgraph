@@ -1,4 +1,6 @@
-#!/usr/bin/ksh
+#!/usr/bin/env ksh
+
+# #!/usr/bin/ksh
 # #!/usr/bin/bash
 
 # Sat Feb 28 21:21:50 CET 2015 - mayer 
@@ -18,6 +20,7 @@
 # Sun Feb 14 18:04:52 CET 2016 - mayer - array of values with 8 decimal places 
 # Wed Feb 24 21:19:12 CET 2016 - mayer - option w 
 # Mon May  9 21:14:42 CEST 2016 - mayer - option c - range for calculation 
+# Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG

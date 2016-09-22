@@ -1,4 +1,4 @@
-#!/usr/bin/ksh
+#!/usr/bin/env ksh
 
 # Sat Feb 28 21:21:50 CET 2015 - mayer 
 # Sun Mar 29 22:22:12 CEST 2015 - mayer - optimized arg parser , $YEAR
@@ -22,6 +22,7 @@
 # Sat Feb 13 21:59:47 CET 2016 - mayer - show options for -m and -F 
 # Mon Feb 15 18:35:41 CET 2016 - mayer - loopstats file 
 # Tue Feb 16 22:53:22 CET 2016 - mayer - bugfix arguments 
+# Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
 
 
 

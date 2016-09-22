@@ -1,9 +1,11 @@
-#!/usr/bin/ksh
+#!/usr/bin/env ksh
 
 # Sat Aug 15 13:33:59 CEST 2015
 # Wednesday, August 19, 2015 03:42:24 PM CEST - mayer 
 # Sun Aug 23 20:03:01 CEST 2015 - mayer - bugfix endless loop
 # Sat Feb  6 20:13:51 CET 2016 - mayer - bugfix for date eq - ( yesterday ) 
+# Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh
+
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
