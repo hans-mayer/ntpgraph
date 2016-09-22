@@ -21,6 +21,7 @@
 # Wed Feb 24 21:19:12 CET 2016 - mayer - option w 
 # Mon May  9 21:14:42 CEST 2016 - mayer - option c - range for calculation 
 # Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
+# Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
@@ -286,8 +287,9 @@ $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v TIMEDIFFLO
 
 : exit 0 
 
-HOST1=`getent hosts $IP1 | $AWK '{ print $2 }'`
-HOST2=`getent hosts $IP2 | $AWK '{ print $2 }'`
+# if getent does not exist $HOST1 and $HOST2 is empty
+HOST1=`getent hosts $IP1 2> /dev/null | $AWK '{ print $2 }'`
+HOST2=`getent hosts $IP2 2> /dev/null | $AWK '{ print $2 }'`
 if test -n "$AVGLINE" 
   then 
     AVG="- average: `grep -v '^#' $LIST | head -1 | $AWK '{ print $3 }'`"

@@ -23,6 +23,7 @@
 # Mon Feb 15 18:35:41 CET 2016 - mayer - loopstats file 
 # Tue Feb 16 22:53:22 CET 2016 - mayer - bugfix arguments 
 # Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
+# Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
 
 
 
@@ -405,7 +406,8 @@ if test "$IP1" == '.'
   then 
     TITLE="$MYIPIS $STATSTYPE - $SELDATE "
   else 
-    HOST1=`getent hosts $IP1 | $AWK '{ print $2 }'`
+    # if getent does not exist $HOST1 is empty 
+    HOST1=`getent hosts $IP1 2> /dev/null | $AWK '{ print $2 }'`
     # if reverse lookup does not work take the IP
     if test -z "$HOST1"
       then
