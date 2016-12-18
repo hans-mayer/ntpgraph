@@ -24,13 +24,13 @@
 # Tue Feb 16 22:53:22 CET 2016 - mayer - bugfix arguments 
 # Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
-
+# Sun Dec 18 12:23:38 CET 2016 - mayer - option A for average file 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
-export UNIQARGCNT STATSTYPE ARGC
+export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE
 
 
 AWK=gawk
@@ -53,13 +53,15 @@ LBLPOS=0.95
 UNIQARGCNT=0 	# unique arguments can apear only once 
 STATSTYPE=peerstats
 ARGC=2		# ip-addr and date for peerstats
+AVGFILE=/tmp/ntp_shps_average
+
 
 thisusage(){
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2016 02 16 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2016 12 18 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATE "
+    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
     echo "       IP address  - only for peerstats graph, not for loopstats "
     echo "       -s          - success rate "
@@ -67,6 +69,7 @@ thisusage(){
     echo "       -c          - y-axis is number and not percent , usefull for success rate "
     echo "       -i          - interval between updates "
     echo "       -a          - print average line "
+    echo "       -A          - save average result in file $AVGFILE / only with -a option usefull "
     echo "       -l          - straight line instead of smooth csplines "
     echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
     echo "       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8 "
@@ -113,6 +116,7 @@ while test $# -gt $ARGC -o do_once -eq 1
       -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -y $2" ; shift ; shift ;;
       -p ) POLL=$2 ; shift ; shift ;;
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
+      -A ) AVGTOFILE=y ; shift ;;
       -s ) DTYPE=s ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -o ) DTYPE=o ; LINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
@@ -467,6 +471,11 @@ gnuplot << EOF
   plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT  
   $PRRESULT
 EOF
+
+if test "$AVGTOFILE" = y 
+  then 
+    echo "$AVG"  | grep aver | awk '{ print $3 }' > $AVGFILE 
+fi 
 
 if test "$DEBUG" == y
   then
