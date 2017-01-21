@@ -49,12 +49,14 @@ LBLPOS=0.95
 
 
 thisusage(){
+    set +x
     echo 
     echo "show time difference for 2 NTP server - v 2016 05 09 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
-    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date "
-    echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
+    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 DATESPEC "
+    echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
+    echo "       DATESPEC can also be path to peerstats file"
     echo "       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours "
     echo "       -y range      - low:high, example -0.1:0.1 , default autorange " 
     echo "       -a            - print average line " 
@@ -100,7 +102,7 @@ while test $# -gt 3 -o do_once -eq 1
            XTICS=2
            echo $FILE ; shift ; shift ;; 
       -l ) LINES="with lines" ; shift ;;
-      -D ) DEBUG=y ; set -x ; shift ;;
+      -D ) DEBUG=y ; set -x; shift ;;
       -m ) TIMEDIFFLOW=-$2 ; TIMEDIFFHIGH=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -m $TIMEDIFFHIGH" ;; 
       -c ) TIMEDIFFLOW=$2 ; TIMEDIFFHIGH=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -c $TIMEDIFFLOW $TIMEDIFFHIGH" ;; 
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;; 
@@ -151,7 +153,9 @@ if test -z "$FILE"
 fi
 
 
-# very rudimentary check of date
+# if date field is a valid filename, use it as datasource
+# otherwise perform rudimentary date check
+TITLEHOST=$(uname -n)
 case "$MDATE" in
   [0-9\?][0-9\?][0-9\?][0-9\?] ) 
 	SELDATE=$YEAR$MDATE ;;
@@ -159,9 +163,15 @@ case "$MDATE" in
 	SELDATE=$MDATE ;;
   \. ) 	SELDATE=`TZ=GMT date +%Y%m%d` ;;
   - )   SELDATE=`TZ=GMT+24 date +%Y%m%d` ;;
-  * )   echo $0: wrong date format - must be MMDD or YYYYMMDD or . 1>&2
-        thisusage
-        exit 1
+  * )   if [ -f "$MDATE" ]
+        then
+		STATSFILEPATH=$MDATE
+		TITLEHOST=$(basename $STATSFILEPATH)
+        else
+	    echo "$0: wrong date format - must be one of {MMDD | YYYYMMDD | . | - } or a filename" 1>&2
+		thisusage
+		exit 1
+        fi
         ;;
 esac
 
@@ -201,24 +211,24 @@ fi
 # awk is needed for solaris to strip off the leading blanks 
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
 PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
-PEERSTATS=${PEERSTATS:-peerstats} # in case filegen keyword not found
-
+PEERSTATS=${PEERSTATS:-peerstats} # in case no filegen keyword in ntp.conf
 : echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS
+STATSFILEPATH=${STATSFILEPATH:-$STATSDIR/$PEERSTATS.$SELDATE}
 
 # does at least one file exist ? 
-ls $STATSDIR/${PEERSTATS}.$SELDATE > /dev/null 2>&1 
+ls $STATSFILEPATH > /dev/null 2>&1 
 if test $? -ne 0 
   then
-    echo $0: $STATSDIR/${PEERSTATS}.$SELDATE not found 
+    echo $0: $STATSFILEPATH not found 
     exit 1
 fi
-DAYS=`ls  $STATSDIR/${PEERSTATS}.$SELDATE | wc -l | $AWK '{ print $1 }'`
+DAYS=`ls  $STATSFILEPATH | wc -l | $AWK '{ print $1 }'`
 : echo 
 
 # peerstats column 2 are seconds after midnight 
 # myarray enhaelt anzahl gefundenet zeilen pro stunde 
 : echo $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 
-cat $STATSDIR/$PEERSTATS.$SELDATE | \
+cat $STATSFILEPATH | \
 $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v TIMEDIFFLOW=$TIMEDIFFLOW -v TIMEDIFFHIGH=$TIMEDIFFHIGH '
   BEGIN {
     # print ( "awk begin " ) ; 
@@ -345,7 +355,7 @@ FIT_LOG=/tmp/fit.log.$$
 gnuplot << EOF
   $TERM
   $FILE 
-  set title "`uname -n`: $IP1 - $IP2 - $SELDATE \n $HOST1 - $HOST2 $AVG\n$SHOWOPT"
+  set title "$TITLEHOST: $IP1 - $IP2 - $SELDATE \n $HOST1 - $HOST2 $AVG\n$SHOWOPT"
   set xlabel "hour"
   set ylabel "offset (sec)"
   set xtics $XTICS
@@ -373,7 +383,7 @@ if test "$DEBUG" == y
       then
         ls -l $FIT_LOG
     fi
-    echo STATSDIR $STATSDIR PEERSTATS ${PEERSTATS}.$SELDATE
+    echo STATSDIR $STATSDIR PEERSTATS $STATSFILEPATH
     echo plotfile: $LIST
     echo "$AVG "
   else
