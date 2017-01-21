@@ -40,7 +40,7 @@ while test $# -gt $MINARGS -o do_once -eq 1
   do
     do_once=0
     case $1 in
-      -D ) DEBUG=y ; shift ;;
+      -D ) DEBUG=y ; set -x ; shift ;;
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2 size 900,500"
            LINEWIDTH=1
@@ -125,6 +125,8 @@ fi
 # awk is needed for solaris to strip off the leading blanks
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
 PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
+PEERSTATS=${PEERSTATS:-peerstats} # in case filegen keyword not found
+
 if test "$DEBUG" == y
   then
     echo CONF $CONF

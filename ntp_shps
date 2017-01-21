@@ -123,7 +123,7 @@ while test $# -gt $ARGC -o do_once -eq 1
       -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -Z ) DEBUG=y ; shift ;; 
+      -Z ) DEBUG=y ; set -x ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2"
            LINEWIDTH=1
@@ -267,6 +267,8 @@ fi
 # awk is needed for solaris to strip off the leading blanks
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
 STATSFILE=`grep filegen $CONF | grep $STATSTYPE | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
+STATSFILE=${STATSFILE:-$STATSTYPE} # default in case no "filegen" in ntp.conf
+
 if test "$DEBUG" == y
   then
     echo CONF $CONF

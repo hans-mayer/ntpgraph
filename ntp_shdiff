@@ -100,7 +100,7 @@ while test $# -gt 3 -o do_once -eq 1
            XTICS=2
            echo $FILE ; shift ; shift ;; 
       -l ) LINES="with lines" ; shift ;;
-      -D ) DEBUG=y ; shift ;;
+      -D ) DEBUG=y ; set -x ; shift ;;
       -m ) TIMEDIFFLOW=-$2 ; TIMEDIFFHIGH=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -m $TIMEDIFFHIGH" ;; 
       -c ) TIMEDIFFLOW=$2 ; TIMEDIFFHIGH=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -c $TIMEDIFFLOW $TIMEDIFFHIGH" ;; 
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;; 
@@ -201,6 +201,8 @@ fi
 # awk is needed for solaris to strip off the leading blanks 
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
 PEERSTATS=`grep filegen $CONF | grep peerstats | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
+PEERSTATS=${PEERSTATS:-peerstats} # in case filegen keyword not found
+
 : echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS
 
 # does at least one file exist ? 
