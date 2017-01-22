@@ -57,12 +57,14 @@ AVGFILE=/tmp/ntp_shps_average
 
 
 thisusage(){
+    set +x
     echo 
     echo "show NTP peerstats or loopstats values as graph  - v 2016 12 18 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
-    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATE "
-    echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) "
+    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATESPEC "
+    echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
+    echo "       DATESPEC may also be path to peerstats/loopstats file"
     echo "       IP address  - only for peerstats graph, not for loopstats "
     echo "       -s          - success rate "
     echo "       -p value    - poll interval used for calculation of success rate, default 64 "
@@ -123,7 +125,7 @@ while test $# -gt $ARGC -o do_once -eq 1
       -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -Z ) DEBUG=y ; shift ;; 
+      -Z ) DEBUG=y ; set -x; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2"
            LINEWIDTH=1
@@ -199,7 +201,9 @@ if test $# -eq 2
     MDATE=$1
 fi
 
-# very rudimentary check of date 
+# if date field is a valid filename, use it as datasource
+# otherwise perform rudimentary date check
+TITLEHOST=$(uname -n)
 case "$MDATE" in 
   [0-9\?][0-9\?][0-9\?][0-9\?] ) 
         SELDATE=$YEAR$MDATE ;;
@@ -207,9 +211,15 @@ case "$MDATE" in
         SELDATE=$MDATE ;;
   \. )  SELDATE=`TZ=GMT date +%Y%m%d` ;;
   - )   SELDATE=`TZ=GMT+24 date +%Y%m%d` ;;
-  * )   echo $0: wrong date format - must be MMDD or . 1>&2 
-	thisusage
-    	exit 1
+  * )   if [ -f "$MDATE" ]
+        then
+		STATSFILEPATH=$MDATE
+		TITLEHOST=$(basename $STATSFILEPATH)
+        else
+	    echo "$0: wrong date format - must be one of {MMDD | YYYYMMDD | . | - } or a filename" 1>&2
+		thisusage
+		exit 1
+        fi
     	;;
 esac
 
@@ -267,20 +277,22 @@ fi
 # awk is needed for solaris to strip off the leading blanks
 STATSDIR=`grep statsdir $CONF | grep -v '^#' | tr '""' '  ' | head -1 | $AWK '{ print ( $2 ) }'`
 STATSFILE=`grep filegen $CONF | grep $STATSTYPE | grep -v '^#' | head -1 | $AWK '{ print ( $4 ) }'`
+STATSFILE=${STATSFILE:-$STATSTYPE} # default in case no "filegen" in ntp.conf
+STATSFILEPATH=${STATSFILEPATH:-$STATSDIR/$STATSFILE.$SELDATE}
 if test "$DEBUG" == y
   then
     echo CONF $CONF
-    echo STATSDIR $STATSDIR STATSFILE $STATSFILE.$SELDATE
+    echo STATSDIR $STATSDIR STATSFILE $STATSFILEPATH
     echo DAYS=$DAYS TIMESPERH=$TIMESPERH CNTONLY=$CNTONLY POLL=$POLL 
 fi
 
-if test ! -f $STATSDIR/${STATSFILE}.$SELDATE 
+if test ! -f $STATSFILEPATH 
   then 
-    echo $0: file $STATSDIR/${STATSFILE}.$SELDATE not found 
+    echo $0: file $STATSFILEPATH not found 
     exit 1 
 fi 
 
-DAYS=`ls  $STATSDIR/${STATSFILE}.$SELDATE | wc -l | $AWK '{ print $1 }'` 
+DAYS=`ls  $STATSFILEPATH | wc -l | $AWK '{ print $1 }'` 
 : echo 
 
 # peerstats column 2 are seconds after midnight 
@@ -289,7 +301,7 @@ DAYS=`ls  $STATSDIR/${STATSFILE}.$SELDATE | wc -l | $AWK '{ print $1 }'`
 if test $DTYPE == s 
   then 
     # show success graph 
-    cat $STATSDIR/$STATSFILE.$SELDATE | \
+    cat $STATSFILEPATH | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
@@ -312,7 +324,7 @@ fi
 if test $DTYPE == i 
   then 
     # show graph with intervals 
-    cat $STATSDIR/$STATSFILE.$SELDATE | \
+    cat $STATSFILEPATH | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
@@ -351,7 +363,7 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
       * ) echo "$0: fatal program error " 1>&2 
 	  exit 1 ;; 
     esac 
-    cat $STATSDIR/$STATSFILE.$SELDATE | \
+    cat $STATSFILEPATH | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
       BEGIN {
@@ -400,24 +412,24 @@ fi
 type ip > /dev/null 2>&1 
 if test $? -eq 0 
   then 
-    MYIPIS="`uname -n`/`ip route get 244.0.0.0 | head -1 | $AWK '{ print $7 }'`"
+    MYIPIS="$TITLEHOST/`ip route get 244.0.0.0 | head -1 | $AWK '{ print $7 }'`"
   else 
-    MYIPIS="`uname -n`"
+    MYIPIS="$TITLEHOST"
 fi
 
 # IP1 ist . fuer loopstats file 
 if test "$IP1" == '.' 
   then 
-    TITLE="$MYIPIS $STATSTYPE - $SELDATE "
+    TITLE="$MYIPIS $STATSTYPE - ${SELDATE:-} "
   else 
     # if getent does not exist $HOST1 is empty 
     HOST1=`getent hosts $IP1 2> /dev/null | $AWK '{ print $2 }'`
     # if reverse lookup does not work take the IP
     if test -z "$HOST1"
       then
-        TITLE="$MYIPIS $STATSTYPE - $IP1 - $SELDATE "
+        TITLE="$MYIPIS $STATSTYPE - $IP1 - ${SELDATE:-} "
       else 
-        TITLE="$MYIPIS $STATSTYPE - $IP1 - $HOST1 - $SELDATE "
+        TITLE="$MYIPIS $STATSTYPE - $IP1 - $HOST1 - ${SELDATE:-} "
     fi
 fi
 

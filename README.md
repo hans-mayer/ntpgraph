@@ -11,6 +11,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 * ntptconv
 * ntp_shavail
 
+Ubuntu prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
 ## ntp_shps 
 
@@ -22,7 +23,8 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
       author: ntpgraph@ma.yer.at
 
     usage: ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATE
-       date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
+       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday) 
+       DATESPEC may also be path to peerstats/loopstats file
        IP address  - only for peerstats graph, not for loopstats
        -s          - success rate
        -p value    - poll interval used for calculation of success rate, default 64
@@ -123,7 +125,8 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
       author: ntpgraph@ma.yer.at
     
     usage: /opt/iiasa/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date
-       date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
+       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday) 
+       DATESPEC may also be path to peerstats/loopstats file
        -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours
        -y range      - low:high, example -0.1:0.1 , default autorange
        -a            - print average line
