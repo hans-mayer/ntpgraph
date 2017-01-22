@@ -26,13 +26,14 @@
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
 # Sun Dec 18 12:23:38 CET 2016 - mayer - option A for average file 
 # Sun Jan 22 13:16:12 CET 2017 - mayer - git merge from pull request github.com/velotraveler/ntpgraph
+# Sun Jan 22 22:19:50 CET 2017 - mayer - set fit quiet only for gnuplot above 4.6 
 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
-export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE
+export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET
 
 
 AWK=gawk
@@ -435,9 +436,19 @@ if test "$IP1" == '.'
     fi
 fi
 
+# only gnuplot version 4.6 and higher supports "set fit quiet "
+gnuplot -V | $AWK '{ if ( $2 >= 4.6 ) { exit 1 } else exit 0 }'
+if test $? -eq 1 
+  then 
+    FITQUIET='set fit quiet'
+  else 
+    FITQUIET=''
+fi 
+
+FIT_LOG=/tmp/fit.log.$$
 if test -n "$FFIT"
   then
-    LOGFIT="set fit logfile \"/tmp/fit.log.$$\""
+    LOGFIT="set fit logfile \"$FIT_LOG\""
     YFIT=`head -1 "$LIST" | $AWK '{ print ( "y0 = " , $2 ) }'`
     case "$POLYN" in 
       1 ) 
@@ -460,7 +471,6 @@ if test -n "$FFIT"
 	;;
     esac 
 fi
-FIT_LOG=/tmp/fit.log.$$
 
 gnuplot << EOF
   $STERM
@@ -473,11 +483,11 @@ gnuplot << EOF
   set yrange $YRANGE
   set style line 1 linewidth $LINEWIDTH
   set style line 2 linewidth $LINEWIDTH
-  set fit quiet
   $FORMATY
   set dummy x, y
   $LINEX
   $LOGFIT
+  $FITQUIET
   $XFIT
   $YFIT
   $UNWFIT
