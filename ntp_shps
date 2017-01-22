@@ -25,6 +25,8 @@
 # Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
 # Sun Dec 18 12:23:38 CET 2016 - mayer - option A for average file 
+# Sun Jan 22 13:16:12 CET 2017 - mayer - git merge from pull request github.com/velotraveler/ntpgraph
+
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
@@ -59,12 +61,12 @@ AVGFILE=/tmp/ntp_shps_average
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2016 12 18 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 01 22 "
     echo "  author: ntpgraph@ma.yer.at "
     echo 
     echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
-    echo "       DATESPEC may also be path to peerstats/loopstats file"
+    echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
     echo "       -s          - success rate "
     echo "       -p value    - poll interval used for calculation of success rate, default 64 "

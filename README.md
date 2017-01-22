@@ -1,6 +1,6 @@
 # ntpgraph
 
-### make NTP statistic files visible 
+### make NTP statistic files visible as graph 
 
 for UNIX like systems 
 
@@ -11,7 +11,7 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 * ntptconv
 * ntp_shavail
 
-Ubuntu prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
+Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
 ## ntp_shps 
 
@@ -19,39 +19,41 @@ Ubuntu prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats values as graph  - v 2016 02 16
-      author: ntpgraph@ma.yer.at
+    show NTP peerstats or loopstats values as graph  - v 2017 01 22 
+      author: ntpgraph@ma.yer.at 
 
-    usage: ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATE
+    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATESPEC 
        DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday) 
        DATESPEC may also be path to peerstats/loopstats file
-       IP address  - only for peerstats graph, not for loopstats
-       -s          - success rate
-       -p value    - poll interval used for calculation of success rate, default 64
-       -c          - y-axis is number and not percent , usefull for success rate
-       -i          - interval between updates
-       -a          - print average line
-       -l          - straight line instead of smooth csplines
-       -f IMG      - output to file - IMG can be jpeg, png, ...
-       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8
-       -y range    - low:high, example -0.1:0.1 , default autorange
-       -t value    - timestemps per hour - default 1
-       -w value    - line width
-       -m min max  - minimum and maximum values for calculation, only for next 4 options below
-       -o          - show offset from peerstats file - column 5
-       -r          - show roundtrip delay from peerstats file - column 6
-       -d          - show dispersion from peerstats file - column 7
-       -j          - show rms jitter from peerstats file - column 8
-       -F n        - fit function, n polynomial ( 1 or 2 )
-       -b          - label at bottom - only for fit function
-       -Z          - debug
-       -Y string   - y-axis format, example 8.6f
-       -L          - use loopstats file instead of peerstats file
-       -O          - show offset from loopstats file - column 3
-       -D          - show drift compensation from loopstats file - column 4
-       -E          - show estimated error from loopstats file - column 5
-       -S          - show stability from loopstats file - column 6
-       -P          - show polling interval from loopstats file - column 7
+       IP address  - only for peerstats graph, not for loopstats 
+       -s          - success rate 
+       -p value    - poll interval used for calculation of success rate, default 64 
+       -c          - y-axis is number and not percent , usefull for success rate 
+       -i          - interval between updates 
+       -a          - print average line 
+       -A          - save average result in file /tmp/ntp_shps_average / only with -a option usefull 
+       -l          - straight line instead of smooth csplines 
+       -f IMG      - output to file - IMG can be jpeg, png, ... 
+       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8 
+       -y range    - low:high, example -0.1:0.1 , default autorange 
+       -t value    - timestemps per hour - default 1 
+       -w value    - line width 
+       -m min max  - minimum and maximum values for calculation, only for next 4 options below 
+       -o          - show offset from peerstats file - column 5 
+       -r          - show roundtrip delay from peerstats file - column 6 
+       -d          - show dispersion from peerstats file - column 7 
+       -j          - show rms jitter from peerstats file - column 8 
+       -F n        - fit function, n polynomial ( 1 or 2 )  
+       -b          - label at bottom - only for fit function 
+       -Z          - debug 
+       -Y string   - y-axis format, example 8.6f 
+       -L          - use loopstats file instead of peerstats file 
+       -O          - show offset from loopstats file - column 3 
+       -D          - show drift compensation from loopstats file - column 4 
+       -E          - show estimated error from loopstats file - column 5 
+       -S          - show stability from loopstats file - column 6 
+       -P          - show polling interval from loopstats file - column 7 
+
 
 
 ### examples 
@@ -71,9 +73,9 @@ therefore an exact count of possible updates within one hour is hard to calculat
 * 2) the smooth function generates an overshot. 
 adding the option -l gives sometimes better results 
 
-###### ntp_shps -a -s -f png 127.127.8.0 0725
+###### ntp_shps -a -s -f png 127.127.8.0 20170112
 
-![](img/plot_22516.png)
+![](img/plot_24978.png)
 
 
 #### interval between updates for a DCF receiver 
@@ -81,9 +83,9 @@ adding the option -l gives sometimes better results
 if all data-grams are received all intervals are 64 seconds 
 this gives an indication how well the receiver performs 
 
-###### ntp_shps -a -i -f png -y -50:300 127.127.8.0 0723
+###### ntp_shps -a -i -f png -y -50:300 127.127.8.0 0112
 
-![](img/plot_22693.png)
+![](img/plot_24942.png)
 
 
 #### round-trip delay between a remote peer and the local server 
@@ -121,25 +123,24 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server - v 2016 05 09
-      author: ntpgraph@ma.yer.at
-    
-    usage: /opt/iiasa/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 date
-       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday) 
-       DATESPEC may also be path to peerstats/loopstats file
-       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours
-       -y range      - low:high, example -0.1:0.1 , default autorange
-       -a            - print average line
-       -l            - straight line instead of smooth csplines
-       -f IMG        - output to file in current working directory - IMG can be jpeg, png, ...
-       -t number     - values per hour for average calculation, default is 1
-       -m value      - maximum time difference - default 1.1 second
-       -c low high   - lower and upper limit to calculate - default 1.1 second
-       -F n          - fit function, n polynomial ( 1 or 2 )
-       -L            - label at bottom - only for fit function
-       -w value      - line width
-       -D            - debug
+    show time difference for 2 NTP server as graph - v 2017 01 22 
+      author: ntpgraph@ma.yer.at 
 
+    usage: /uni/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 DATESPEC 
+       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday) 
+       DATESPEC can also be path to peerstats file
+       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours 
+       -y range      - low:high, example -0.1:0.1 , default autorange 
+       -a            - print average line 
+       -l            - straight line instead of smooth csplines 
+       -f IMG        - output to file in current working directory - IMG can be jpeg, png, ... 
+       -t number     - values per hour for average calculation, default is 1  
+       -m value      - maximum time difference - default 1.1 second 
+       -c low high   - lower and upper limit to calculate - default 1.1 second 
+       -F n          - fit function, n polynomial ( 1 or 2 ) 
+       -L            - label at bottom - only for fit function 
+       -w value      - line width 
+       -D            - debug 
 
 ### example
 

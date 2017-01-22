@@ -21,7 +21,7 @@ STERM="set term x11 persist"
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2016 02 06 "
+    echo "show NTP available peers as graph  - v 2017 01 22 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -D ] [ -f IMG ] DATE "

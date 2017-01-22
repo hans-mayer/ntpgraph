@@ -22,6 +22,8 @@
 # Mon May  9 21:14:42 CEST 2016 - mayer - option c - range for calculation 
 # Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
+# Sun Jan 22 13:16:12 CET 2017 - mayer - git merge from pull request github.com/velotraveler/ntpgraph 
+
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
@@ -51,7 +53,7 @@ LBLPOS=0.95
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP server - v 2016 05 09 "
+    echo "show time difference for 2 NTP server as graph - v 2017 01 22 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 DATESPEC "
