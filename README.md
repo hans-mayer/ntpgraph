@@ -106,9 +106,9 @@ The functions is for <br />
 2: line(x) = y0 + m*x + n*x^2
 </pre>
 
-###### ntp_shps -o -x 10:18 -F 1 -f png  127.127.22.0 .
+###### ntp_shps -o -b -x 10:18 -F 1 -f png  127.127.22.0 .
 
-![](img/plot_27188.png) 
+![](img/plot_11845.png) 
 
 Now you get an additional ( green ) line with function: line(x) = y0 + m*x 
 
