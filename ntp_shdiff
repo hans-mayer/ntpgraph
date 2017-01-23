@@ -23,12 +23,12 @@
 # Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh 
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
 # Sun Jan 22 13:16:12 CET 2017 - mayer - git merge from pull request github.com/velotraveler/ntpgraph 
-
+# Mon Jan 23 20:45:29 CET 2017 - mayer - set fit quiet only for gnuplot above 4.6
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
 export TERM YEAR LINES AVG AVGLINE SELDATE LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
-export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH
+export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH FITQUIET
 
 AWK=gawk
 # default one point per hour 
@@ -53,7 +53,7 @@ LBLPOS=0.95
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP server as graph - v 2017 01 22 "
+    echo "show time difference for 2 NTP server as graph - v 2017 01 23 "
     echo "  author: ntpgraph@ma.yer.at "
     echo
     echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 DATESPEC "
@@ -326,10 +326,20 @@ if test ! -s "$LIST"
     exit 1 
 fi 
 
+# only gnuplot version 4.6 and higher supports "set fit quiet "
+gnuplot -V | $AWK '{ if ( $2 >= 4.6 ) { exit 1 } else exit 0 }'
+if test $? -eq 1 
+  then 
+    FITQUIET='set fit quiet'
+  else 
+    FITQUIET=''
+fi 
+
+FIT_LOG=/tmp/fit.log.$$
 y0=0.0 
 if test -n "$FFIT"
   then 
-    LOGFIT="set fit logfile \"/tmp/fit.log.$$\""
+    LOGFIT="set fit logfile \"$FIT_LOG\""
     YFIT=`head -1 "$LIST" | $AWK '{ print ( "y0 = " , $2 ) }'`
     case "$POLYN" in
       1 ) 
@@ -352,7 +362,6 @@ if test -n "$FFIT"
 	;;
     esac
 fi 
-FIT_LOG=/tmp/fit.log.$$
 
 gnuplot << EOF
   $TERM
@@ -368,9 +377,9 @@ gnuplot << EOF
   set style line 2 linewidth 1
   set format y "%9.6f"
   set dummy x, y
-  set fit quiet
   $LINEX
   $LOGFIT
+  $FITQUIET
   $XFIT
   $YFIT 
   $UNWFIT
