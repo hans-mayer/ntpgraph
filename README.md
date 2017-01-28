@@ -19,41 +19,41 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
     # ntp_shps
      
-    show NTP peerstats or loopstats values as graph  - v 2017 01 22 
-      author: ntpgraph@ma.yer.at 
+    show NTP peerstats or loopstats values as graph  - v 2017 01 28
+      author: ntpgraph@ma.yer.at
+      source: https://github.com/hans-mayer/ntpgraph
 
-    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATESPEC 
-       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday) 
+    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC
+       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday)
        DATESPEC may also be path to peerstats/loopstats file
-       IP address  - only for peerstats graph, not for loopstats 
-       -s          - success rate 
-       -p value    - poll interval used for calculation of success rate, default 64 
-       -c          - y-axis is number and not percent , usefull for success rate 
-       -i          - interval between updates 
-       -a          - print average line 
-       -A          - save average result in file /tmp/ntp_shps_average / only with -a option usefull 
-       -l          - straight line instead of smooth csplines 
-       -f IMG      - output to file - IMG can be jpeg, png, ... 
-       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8 
-       -y range    - low:high, example -0.1:0.1 , default autorange 
-       -t value    - timestemps per hour - default 1 
-       -w value    - line width 
-       -m min max  - minimum and maximum values for calculation, only for next 4 options below 
-       -o          - show offset from peerstats file - column 5 
-       -r          - show roundtrip delay from peerstats file - column 6 
-       -d          - show dispersion from peerstats file - column 7 
-       -j          - show rms jitter from peerstats file - column 8 
-       -F n        - fit function, n polynomial ( 1 or 2 )  
-       -b          - label at bottom - only for fit function 
-       -Z          - debug 
-       -Y string   - y-axis format, example 8.6f 
-       -L          - use loopstats file instead of peerstats file 
-       -O          - show offset from loopstats file - column 3 
-       -D          - show drift compensation from loopstats file - column 4 
-       -E          - show estimated error from loopstats file - column 5 
-       -S          - show stability from loopstats file - column 6 
-       -P          - show polling interval from loopstats file - column 7 
-
+       IP address  - only for peerstats graph, not for loopstats
+       -s          - success rate
+       -p value    - poll interval used for calculation of success rate, default 64
+       -c          - y-axis is number and not percent , usefull for success rate
+       -i          - interval between updates
+       -a          - print average line
+       -A          - save average result in file /tmp/ntp_shps_average / only with -a option usefull
+       -l          - straight line instead of smooth csplines
+       -f IMG      - output to file - IMG can be jpeg, png, ...
+       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8
+       -y range    - low:high, example -0.1:0.1 , default autorange
+       -t value    - timestemps per hour - default 1
+       -w value    - line width
+       -m min max  - minimum and maximum values for calculation, only for next 4 options below
+       -o          - show offset from peerstats file - column 5
+       -r          - show roundtrip delay from peerstats file - column 6
+       -d          - show dispersion from peerstats file - column 7
+       -j          - show rms jitter from peerstats file - column 8
+       -F n        - fit function, n polynomial ( 1 or 2 )
+       -b          - label at bottom - only for fit function
+       -Z 1|9      - debug  1 ... less, 9 ... more
+       -Y string   - y-axis format, example 8.6f
+       -L          - use loopstats file instead of peerstats file
+       -O          - show offset from loopstats file - column 3
+       -D          - show drift compensation from loopstats file - column 4
+       -E          - show estimated error from loopstats file - column 5
+       -S          - show stability from loopstats file - column 6
+       -P          - show polling interval from loopstats file - column 7
 
 
 ### examples 
@@ -100,7 +100,7 @@ the local NTP server is connected with ADSL to the Internet
 
 The fit option must have an additional value of 1 or 2 
 
-The functions is for <br />
+The functions is for value <br />
 <pre>
 1: line(x) = y0 + m*x   
 2: line(x) = y0 + m*x + n*x^2
@@ -114,7 +114,7 @@ Now you get an additional ( green ) line with function: line(x) = y0 + m*x
 
 On error output one can directly read the value: m = -1.18075e-05
 
-With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted. 
+With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted for gnuplot version >= 4.6 . 
 
 
 ## ntp_shdiff 
@@ -123,24 +123,26 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted.
 
     # ntp_shdiff
      
-    show time difference for 2 NTP server as graph - v 2017 01 22 
-      author: ntpgraph@ma.yer.at 
+    show time difference for 2 NTP server as graph - v 2017 01 28
+      author: ntpgraph@ma.yer.at
+      source: https://github.com/hans-mayer/ntpgraph
 
-    usage: /uni/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 DATESPEC 
-       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday) 
+    usage: /uni/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] [ -D 1|9 ] IP1 IP2 DATESPEC
+       DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday)
        DATESPEC can also be path to peerstats file
-       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours 
-       -y range      - low:high, example -0.1:0.1 , default autorange 
-       -a            - print average line 
-       -l            - straight line instead of smooth csplines 
-       -f IMG        - output to file in current working directory - IMG can be jpeg, png, ... 
-       -t number     - values per hour for average calculation, default is 1  
-       -m value      - maximum time difference - default 1.1 second 
-       -c low high   - lower and upper limit to calculate - default 1.1 second 
-       -F n          - fit function, n polynomial ( 1 or 2 ) 
-       -L            - label at bottom - only for fit function 
-       -w value      - line width 
-       -D            - debug 
+       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours
+       -y range      - low:high, example -0.1:0.1 , default autorange
+       -a            - print average line
+       -l            - straight line instead of smooth csplines
+       -f IMG        - output to file in current working directory - IMG can be jpeg, png, ...
+       -t number     - values per hour for average calculation, default is 1
+       -m value      - maximum time difference - default 1.1 second
+       -c low high   - lower and upper limit to calculate - default 1.1 second
+       -F n          - fit function, n polynomial ( 1 or 2 )
+       -L            - label at bottom - only for fit function
+       -w value      - line width
+       -D 1|9        - debug  1 ... less, 9 ... more
+
 
 ### example
 
@@ -176,13 +178,15 @@ with ntptconv
 
     # ntp_shavail
 
-    show NTP available peers as graph  - v 2016 02 06
+    show NTP available peers as graph  - v 2017 01 28
       author: ntpgraph@ma.yer.at
-    
-    usage: ntp_shavail [ -D ] [ -f IMG ] DATE
-       date is MMDD in year 2016 or YYYYMMDD or . or - ( . is today, - is yesterday  )
+      source: https://github.com/hans-mayer/ntpgraph
+
+    usage: /uni/bin/ntp_shavail [ -D 1|9 ] [ -f IMG ] DATE
+       date is MMDD in year 2017 or YYYYMMDD or . or - ( . is today, - is yesterday  )
        -f IMG      - output to file - IMG can be jpeg, png, ...
-       -D          - debug
+       -D 1|9      - debug  1 ... less, 9 ... more
+
 
 ntp_shavail will show all available NTP server for a given day. On the Y axis one can see all server. For example server #3 ( 192.168.241.190 ) called "blitz". All it's dots are on the base line which is 3.0 - the .0 says "reject". An other example for server #4. It was most of the time a candidate (+) on line 4.4 and sometime a peer (*) on y-value 4.6 <br />
 The symbols ( x - + # o ) have the same meaning as "ntpq" shows.

@@ -27,13 +27,14 @@
 # Sun Dec 18 12:23:38 CET 2016 - mayer - option A for average file 
 # Sun Jan 22 13:16:12 CET 2017 - mayer - git merge from pull request github.com/velotraveler/ntpgraph
 # Sun Jan 22 22:19:50 CET 2017 - mayer - set fit quiet only for gnuplot above 4.6 
+# Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9 
 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
-export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET
+export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT
 
 
 AWK=gawk
@@ -62,10 +63,11 @@ AVGFILE=/tmp/ntp_shps_average
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 01 22 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 01 28 "
     echo "  author: ntpgraph@ma.yer.at "
+    echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
-    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ IP ] DATESPEC "
+    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
@@ -88,7 +90,7 @@ thisusage(){
     echo "       -j          - show rms jitter from peerstats file - column 8 "
     echo "       -F n        - fit function, n polynomial ( 1 or 2 )  "
     echo "       -b          - label at bottom - only for fit function "
-    echo "       -Z          - debug "
+    echo "       -Z 1|9      - debug  1 ... less, 9 ... more "
     echo "       -Y string   - y-axis format, example 8.6f " 
     echo "       -L          - use loopstats file instead of peerstats file "
     echo "       -O          - show offset from loopstats file - column 3 "
@@ -113,9 +115,7 @@ while test $# -gt $ARGC -o do_once -eq 1
     do_once=0
     case $1 in
       -t ) TIMESPERH=$2 ; shift ; shift ;;
-      -c ) CNTONLY=1 
-           YLBL=count 
-           shift ;; 
+      -c ) CNTONLY=1 ; YLBL=count ; shift ;; 
       -l ) LINES="with lines" ; shift ;;
       -x ) XRANGE="[$2]" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
       -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -y $2" ; shift ; shift ;;
@@ -128,7 +128,7 @@ while test $# -gt $ARGC -o do_once -eq 1
       -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -Z ) DEBUG=y ; set -x; shift ;; 
+      -Z ) DEBUG=y ; shift ; DEBUGOPT=$1 ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2"
            LINEWIDTH=1
@@ -160,6 +160,11 @@ while test $# -gt $ARGC -o do_once -eq 1
         exit 1
     fi
   done
+
+if test "$DEBUGOPT" -eq 9 
+  then 
+    set -x 
+fi 
 
 case $DTYPE in
   x ) 

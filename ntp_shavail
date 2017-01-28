@@ -6,10 +6,11 @@
 # Sat Feb  6 20:13:51 CET 2016 - mayer - bugfix for date eq - ( yesterday ) 
 # Thu Sep 22 15:00:47 CEST 2016 - mayer - using /usr/bin/env ksh
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
+# Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
-export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT
+export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT
 
 AWK=gawk
 YEAR=`TZ=GMT date '+%Y'`
@@ -21,13 +22,14 @@ STERM="set term x11 persist"
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2017 01 22 "
+    echo "show NTP available peers as graph  - v 2017 01 28 "
     echo "  author: ntpgraph@ma.yer.at "
+    echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
-    echo "usage: $0 [ -D ] [ -f IMG ] DATE "
+    echo "usage: $0 [ -D 1|9 ] [ -f IMG ] DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) " 
     echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
-    echo "       -D          - debug "
+    echo "       -D 1|9      - debug  1 ... less, 9 ... more "
     echo
     exit 1
 }
@@ -40,7 +42,7 @@ while test $# -gt $MINARGS -o do_once -eq 1
   do
     do_once=0
     case $1 in
-      -D ) DEBUG=y ; set -x ; shift ;;
+      -D ) DEBUG=y ; shift ; DEBUGOPT=$1 ; shift ;;
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2 size 900,500"
            LINEWIDTH=1
@@ -61,6 +63,11 @@ while test $# -gt $MINARGS -o do_once -eq 1
         exit 1
     fi
   done
+
+if test "$DEBUGOPT" -eq 9
+  then
+    set -x
+fi
 
 
 if test $# -eq 1

@@ -24,11 +24,12 @@
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
 # Sun Jan 22 13:16:12 CET 2017 - mayer - git merge from pull request github.com/velotraveler/ntpgraph 
 # Mon Jan 23 20:45:29 CET 2017 - mayer - set fit quiet only for gnuplot above 4.6
+# Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
 export TERM YEAR LINES AVG AVGLINE SELDATE LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
-export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH FITQUIET
+export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH FITQUIET DEBUGOPT
 
 AWK=gawk
 # default one point per hour 
@@ -53,10 +54,11 @@ LBLPOS=0.95
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP server as graph - v 2017 01 23 "
+    echo "show time difference for 2 NTP server as graph - v 2017 01 28 "
     echo "  author: ntpgraph@ma.yer.at "
+    echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
-    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] IP1 IP2 DATESPEC "
+    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] [ -D 1|9 ] IP1 IP2 DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC can also be path to peerstats file"
     echo "       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours "
@@ -70,7 +72,7 @@ thisusage(){
     echo "       -F n          - fit function, n polynomial ( 1 or 2 ) "
     echo "       -L            - label at bottom - only for fit function "
     echo "       -w value      - line width "
-    echo "       -D            - debug "
+    echo "       -D 1|9        - debug  1 ... less, 9 ... more "
     echo 
     exit 1
 }
@@ -104,7 +106,7 @@ while test $# -gt 3 -o do_once -eq 1
            XTICS=2
            echo $FILE ; shift ; shift ;; 
       -l ) LINES="with lines" ; shift ;;
-      -D ) DEBUG=y ; set -x; shift ;;
+      -D ) DEBUG=y ; shift ; DEBUGOPT=$1 ; shift ;;
       -m ) TIMEDIFFLOW=-$2 ; TIMEDIFFHIGH=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -m $TIMEDIFFHIGH" ;; 
       -c ) TIMEDIFFLOW=$2 ; TIMEDIFFHIGH=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -c $TIMEDIFFLOW $TIMEDIFFHIGH" ;; 
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;; 
@@ -125,6 +127,11 @@ while test $# -gt 3 -o do_once -eq 1
         exit 1
     fi
   done 
+
+if test "$DEBUGOPT" -eq 9
+  then
+    set -x
+fi
 
 : echo "$AVGLINE$ "
 
