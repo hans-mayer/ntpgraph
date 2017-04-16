@@ -11,7 +11,8 @@
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
-export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT NOSELECT NOTSELECTED 
+export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT NOSELECT NOTSELECTED H SRV NOSELHOST
+
 
 AWK=gawk
 YEAR=`TZ=GMT date '+%Y'`
@@ -144,6 +145,7 @@ if test "$DEBUG" == y
     echo CONF $CONF
     echo STATSDIR $STATSDIR PEERSTATS $PEERSTATS.$SELDATE
     echo TMPIPADDR $TMPIPADDR
+    echo NOTSELECTED $NOTSELECTED
 fi
 
 if test ! -f $STATSDIR/${PEERSTATS}.$SELDATE
@@ -152,24 +154,42 @@ if test ! -f $STATSDIR/${PEERSTATS}.$SELDATE
     exit 1
 fi
 
+# OS X doesn't have getent 
+type getent > /dev/null 2>&1 
+
+if test $? -ne 0 -a $NOSELECT = y 
+  then 
+    echo option noselect -n disabled as program getent is not available 
+    echo if this is macOS from Aplle try to get an emulated script for example from 
+    echo https://github.com/petere/getent-osx.git 
+    NOSELECT=n 
+fi
+
 rm -f $NOTSELECTED
 if test $NOSELECT = y
   then 
     # create a list if IP which we do not show 
-    egrep '^server .* noselect' $CONF | $AWK '{ print $2 }' | while read S 
-      do
-        # mac os x doesn't have getent - so option -n will not work 
-        # H is empty if it#'s an ip and no reverse lookup available 
-        H=`getent hosts $S 2> /dev/null`
-        if test -z "$H" 
-          then 
-            echo $S >> $NOTSELECTED
-          else 
-            echo $H | $AWK '{ print $1 }' >> $NOTSELECTED 
-        fi 
-      done
+    NOSELHOST=`egrep '^server .* noselect' $CONF | $AWK '{ print $2 }'` 
+    if test -n "$NOSELHOST" 
+      then 
+        echo "$NOSELHOST" | while read SRV 
+          do
+            # mac os x doesn't have getent - so option -n will not work 
+            # H is empty if it's an ip and no reverse lookup available 
+            H=`getent hosts $SRV 2> /dev/null`
+            if test -z "$H" 
+              then 
+                echo $SRV >> $NOTSELECTED
+              else 
+                echo $H | $AWK '{ print $1 }' >> $NOTSELECTED 
+            fi 
+          done
+      else 
+        echo $0: there are no noselected hosts found 
+        # any string which could not be a server name for grep -v 
+        echo we_take_all_servers > $NOTSELECTED 
+    fi
   else 
-    # any string which coult not be a server name for grep -v 
     echo we_take_all_servers > $NOTSELECTED 
 fi 
 
