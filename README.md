@@ -178,17 +178,18 @@ with ntptconv
 
     # ntp_shavail
 
-    show NTP available peers as graph  - v 2017 01 28
-      author: ntpgraph@ma.yer.at
-      source: https://github.com/hans-mayer/ntpgraph
+    show NTP available peers as graph  - v 2017 04 16 
+      author: ntpgraph@ma.yer.at 
+      source: https://github.com/hans-mayer/ntpgraph 
+    
+    usage: /uni/bin/ntp_shavail [ -n ] [ -D 1|9 ] [ -f IMG ] DATE 
+       date is MMDD in year 2017 or YYYYMMDD or . or - ( . is today, - is yesterday  ) 
+       -f IMG      - output to file - IMG can be jpeg, png, ... 
+       -n          - don't take server marked as noselect 
+       -D 1|9      - debug  1 ... less, 9 ... more 
 
-    usage: /uni/bin/ntp_shavail [ -D 1|9 ] [ -f IMG ] DATE
-       date is MMDD in year 2017 or YYYYMMDD or . or - ( . is today, - is yesterday  )
-       -f IMG      - output to file - IMG can be jpeg, png, ...
-       -D 1|9      - debug  1 ... less, 9 ... more
 
-
-ntp_shavail will show all available NTP server for a given day. On the Y axis one can see all server. For example server #3 ( 192.168.241.190 ) called "blitz". All it's dots are on the base line which is 3.0 - the .0 says "reject". An other example for server #4. It was most of the time a candidate (+) on line 4.4 and sometime a peer (*) on y-value 4.6 <br />
+ntp_shavail will show all available NTP server for a given day. The option -n gives the possibility to exclude server which are marked as noselect in the configuration file. On the Y axis one can see all server. For example server #3 ( 192.168.241.190 ) called "blitz". All it's dots are on the base line which is 3.0 - the .0 says "reject". An other example for server #4. It was most of the time a candidate (+) on line 4.4 and sometime a peer (*) on y-value 4.6 <br />
 The symbols ( x - + # o ) have the same meaning as "ntpq" shows.
 
 ntp_shavail -f png .
