@@ -159,9 +159,17 @@ if test $NOSELECT = y
     egrep '^server .* noselect' $CONF | $AWK '{ print $2 }' | while read S 
       do
         # mac os x doesn't have getent - so option -n will not work 
-        getent hosts $S 2> /dev/null | $AWK '{ print $1 }' >> $NOTSELECTED 
+        # H is empty if it#'s an ip and no reverse lookup available 
+        H=`getent hosts $S 2> /dev/null`
+        if test -z "$H" 
+          then 
+            echo $S >> $NOTSELECTED
+          else 
+            echo $H | $AWK '{ print $1 }' >> $NOTSELECTED 
+        fi 
       done
   else 
+    # any string which coult not be a server name for grep -v 
     echo we_take_all_servers > $NOTSELECTED 
 fi 
 
