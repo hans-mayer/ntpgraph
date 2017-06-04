@@ -160,7 +160,7 @@ type getent > /dev/null 2>&1
 if test $? -ne 0 -a $NOSELECT = y 
   then 
     echo option noselect -n disabled as program getent is not available 
-    echo if this is macOS from Aplle try to get an emulated script for example from 
+    echo if this is macOS from Apple try to get an emulated script for example from 
     echo https://github.com/petere/getent-osx.git 
     NOSELECT=n 
 fi

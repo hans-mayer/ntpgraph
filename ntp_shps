@@ -28,7 +28,7 @@
 # Sun Jan 22 13:16:12 CET 2017 - mayer - git merge from pull request github.com/velotraveler/ntpgraph
 # Sun Jan 22 22:19:50 CET 2017 - mayer - set fit quiet only for gnuplot above 4.6 
 # Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9 
-
+# Sun Jun  4 13:46:50 CEST 2017 - mayer - check XRANGE 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
@@ -63,7 +63,7 @@ AVGFILE=/tmp/ntp_shps_average
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 01 28 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 06 04 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -184,6 +184,7 @@ case $DTYPE in
     ;; 
 esac
 
+
 if test $UNIQARGCNT -ne 1 
   then
     echo 1>&2
@@ -245,8 +246,19 @@ fi
 type $AWK > /dev/null
 if test $? -ne 0
   then
+    echo 
     echo try to install $AWK
     echo if not available try a symlink to awk or change this script
+    exit 1
+fi
+
+# check XRANGE low value smaller than high value 
+echo $XRANGE | tr '[:]' '   ' | $AWK '{ if ( $1 >= $2 )  { exit 1 } else exit 0  }' 
+if test $? -ne 0
+  then 
+    echo 
+    echo "xrange low < high, example 1:10.75 "
+    thisusage
     exit 1
 fi
 
