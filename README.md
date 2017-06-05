@@ -1,10 +1,10 @@
 # ntpgraph
 
-### make NTP statistic files visible as graph 
+### make NTP statistic files visible as graph
 
-for UNIX like systems 
+for UNIX like systems
 
-ksh scripts using gawk, gnuplot and gnuplot-x11 
+ksh scripts using gawk, gnuplot and gnuplot-x11
 
 * ntp_shps
 * ntp_shdiff
@@ -13,12 +13,12 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 
 Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
-## ntp_shps 
+## ntp_shps
 
-### usage 
+### usage
 
     # ntp_shps
-     
+
     show NTP peerstats or loopstats values as graph  - v 2017 06 04
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
@@ -56,51 +56,51 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
        -P          - show polling interval from loopstats file - column 7
 
 
-### examples 
+### examples
 
-#### offset by a GPS disciplined NTP server 
+#### offset by a GPS disciplined NTP server
 
 ###### ntp_shps -a -o -f png 127.127.28.1 0711
 
 ![](img/plot_7026.png)
 
-#### success rate for a DCF receiver 
+#### success rate for a DCF receiver
 
 of course it can't be more than 100%.
-but there two reasons why the graph shows more than 100 % 
+but there two reasons why the graph shows more than 100 %
 * 1) the reference clock is updated each 64 seconds.  
 therefore an exact count of possible updates within one hour is hard to calculate
-* 2) the smooth function generates an overshot. 
-adding the option -l gives sometimes better results 
+* 2) the smooth function generates an overshot.
+adding the option -l gives sometimes better results
 
 ###### ntp_shps -a -s -f png 127.127.8.0 20170112
 
 ![](img/plot_24978.png)
 
 
-#### interval between updates for a DCF receiver 
+#### interval between updates for a DCF receiver
 
-if all data-grams are received all intervals are 64 seconds 
-this gives an indication how well the receiver performs 
+if all data-grams are received all intervals are 64 seconds
+this gives an indication how well the receiver performs
 
 ###### ntp_shps -a -i -f png -y -50:300 127.127.8.0 0112
 
 ![](img/plot_24942.png)
 
 
-#### round-trip delay between a remote peer and the local server 
+#### round-trip delay between a remote peer and the local server
 
-the local NTP server is connected with ADSL to the Internet 
+the local NTP server is connected with ADSL to the Internet
 
-###### ntp_shps -a -r -y 0:0.03 -f png some.ip.addr 0723 
+###### ntp_shps -a -r -y 0:0.03 -f png some.ip.addr 0723
 
 ![](img/plot_7266.png)
 
-#### using the FIT function to interpolate the measured values 
+#### using the FIT function to interpolate the measured values
 
-The fit option must have an additional value of 1 or 2 
+The fit option must have an additional value of 1 or 2
 
-The functions is for value <br />
+The function is defined for value <br />
 <pre>
 1: line(x) = y0 + m*x   
 2: line(x) = y0 + m*x + n*x^2
@@ -108,21 +108,21 @@ The functions is for value <br />
 
 ###### ntp_shps -o -b -x 10:18 -F 1 -f png  127.127.22.0 .
 
-![](img/plot_11845.png) 
+![](img/plot_11845.png)
 
-Now you get an additional ( green ) line with function: line(x) = y0 + m*x 
+Now you get an additional ( green ) line with function: line(x) = y0 + m*x
 
 On error output one can directly read the value: m = -1.18075e-05
 
-With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted for gnuplot version >= 4.6 . 
+With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted for gnuplot version >= 4.6 .
 
 
-## ntp_shdiff 
+## ntp_shdiff
 
-### usage 
+### usage
 
     # ntp_shdiff
-     
+
     show time difference for 2 NTP server as graph - v 2017 06 04
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
@@ -146,22 +146,22 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted for 
 
 ### example
 
-#### time difference between two NTP server 
+#### time difference between two NTP server
 
 ###### ntp_shdiff -a -f png 127.127.28.1 some.ip.addr 0724
 
 ![](img/plot_7381.png)
 
 
-## ntptconv 
+## ntptconv
 
-#### ntp time convert 
+#### ntp time convert
 
-make the time stamp in various statistic files human readable 
+make the time stamp in various statistic files human readable
 
-example 
+example
 
-without ntptconv 
+without ntptconv
 
     $ cat /var/log/ntpstats/peerstats.20150725 | grep 0.001142971
     57228 86324.503 192.168.241.190 9024 0.005973466 0.001142971 0.000946181 0.000013892
@@ -172,28 +172,32 @@ with ntptconv
     57228 23:58:44 192.168.241.190 9024 0.005973466 0.001142971 0.000946181 0.000013892
 
 
-## ntp_shavail 
+## ntp_shavail
 
 ### usage
 
     # ntp_shavail
 
-    show NTP available peers as graph  - v 2017 04 16 
-      author: ntpgraph@ma.yer.at 
-      source: https://github.com/hans-mayer/ntpgraph 
-    
-    usage: /uni/bin/ntp_shavail [ -n ] [ -D 1|9 ] [ -f IMG ] DATE 
-       date is MMDD in year 2017 or YYYYMMDD or . or - ( . is today, - is yesterday  ) 
-       -f IMG      - output to file - IMG can be jpeg, png, ... 
-       -n          - don't take server marked as noselect 
-       -D 1|9      - debug  1 ... less, 9 ... more 
+    show NTP available peers as graph  - v 2017 04 16
+      author: ntpgraph@ma.yer.at
+      source: https://github.com/hans-mayer/ntpgraph
+
+    usage: /uni/bin/ntp_shavail [ -n ] [ -D 1|9 ] [ -f IMG ] DATE
+       date is MMDD in year 2017 or YYYYMMDD or . or - ( . is today, - is yesterday  )
+       -f IMG      - output to file - IMG can be jpeg, png, ...
+       -n          - don't take server marked as noselect
+       -D 1|9      - debug  1 ... less, 9 ... more
 
 
-ntp_shavail will show all available NTP server for a given day. The option -n gives the possibility to exclude server which are marked as noselect in the configuration file. On the Y axis one can see all server. For example server #3 ( 192.168.241.190 ) called "blitz". All it's dots are on the base line which is 3.0 - the .0 says "reject". An other example for server #4. It was most of the time a candidate (+) on line 4.4 and sometime a peer (*) on y-value 4.6 <br />
+ntp_shavail will show all available NTP server for a given day. The option -n gives the possibility to exclude server which are marked as "noselect" in the configuration file. On the Y axis one can see all server. For example server #3 ( 192.168.241.190 ) called "blitz". All it's dots are on the base line which is 3.0 - the .0 says "reject". An other example for server #4. It was most of the time a candidate (+) on line 4.4 and sometime a peer (*) on y-value 4.6 <br />
 The symbols ( x - + # o ) have the same meaning as "ntpq" shows.
 
 ntp_shavail -f png .
 
 ![](img/plot_19046.png)
 
+## External link
 
+If you are running a NTP server with a GPS module you may be interested in this scripts I wrote:
+
+https://github.com/hans-mayer/sat_usage
