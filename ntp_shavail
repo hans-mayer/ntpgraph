@@ -8,6 +8,8 @@
 # Thu Sep 22 16:44:24 CEST 2016 - mayer - getent not availavle on OS X 
 # Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9
 # Sun Apr 16 12:12:11 CEST 2017 - mayer - option n / noselect
+# Friday, June 30, 2017 10:22:31 AM CEST - mayer - rm NOTSELECTED
+
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
@@ -26,7 +28,7 @@ NOSELECT=n
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2017 04 16 "
+    echo "show NTP available peers as graph  - v 2017 06 30 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
@@ -249,6 +251,8 @@ gnuplot << EOF
   set xrange [-0.5:24.8]
   plot "$LIST" using 1:2 title "$HOSTN - $MYADDR" 
 EOF
+
+rm -f $NOTSELECTED
 
 if test "$DEBUG" == y
   then
