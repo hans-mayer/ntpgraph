@@ -26,11 +26,12 @@
 # Mon Jan 23 20:45:29 CET 2017 - mayer - set fit quiet only for gnuplot above 4.6
 # Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9
 # Sun Jun  4 13:46:50 CEST 2017 - mayer - check XRANGE
+# Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
 export TERM YEAR LINES AVG AVGLINE SELDATE LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
-export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH FITQUIET DEBUGOPT
+export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH FITQUIET DEBUGOPT XLOW XHIGH 
 
 AWK=gawk
 # default one point per hour 
@@ -55,7 +56,7 @@ LBLPOS=0.95
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP server as graph - v 2017 06 04 "
+    echo "show time difference for 2 NTP server as graph - v 2017 07 07 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
@@ -84,16 +85,6 @@ if test $? -ne 0
     echo try to install $AWK 
     echo if not available try a symlink to awk or change this script 
     exit 1 
-fi
-
-# check XRANGE low value smaller than high value 
-echo $XRANGE | tr '[:]' '   ' | $AWK '{ if ( $1 >= $2 )  { exit 1 } else exit 0  }' 
-if test $? -ne 0
-  then 
-    echo 
-    echo "xrange low < high, example 1:10.75 "
-    thisusage
-    exit 1
 fi
 
 # no limitation for the y-range , can be overwritten with -y 
@@ -211,6 +202,22 @@ case "$IP2" in
   	exit 1 ;;
 esac 
 
+# check XRANGE low value smaller than high value 
+echo $XRANGE | tr '[:]' '   ' | $AWK '{ if ( $1 >= $2 )  { exit 1 } else exit 0  }' 
+if test $? -ne 0
+  then 
+    echo 
+    echo "xrange low < high, example 1:10.75 "
+    thisusage
+    exit 1
+fi
+
+# split XRANGE into 2 parts 
+XLOW=`echo $XRANGE | tr '[:]' '   ' | $AWK '{ print $1 }'`
+XHIGH=`echo $XRANGE | tr '[:]' '   ' | $AWK '{ print $2 }'`
+
+: echo XLOW $XLOW XHIGH $XHIGH
+
 # check where the conf file is located 
 CONF=N
 if test -f /etc/ntp.conf 
@@ -249,6 +256,7 @@ DAYS=`ls  $STATSFILEPATH | wc -l | $AWK '{ print $1 }'`
 # myarray enhaelt anzahl gefundenet zeilen pro stunde 
 : echo $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 
 cat $STATSFILEPATH | \
+$AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
 $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v IP1=$IP1 -v IP2=$IP2 -v TIMEDIFFLOW=$TIMEDIFFLOW -v TIMEDIFFHIGH=$TIMEDIFFHIGH '
   BEGIN {
     # print ( "awk begin " ) ; 

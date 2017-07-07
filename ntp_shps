@@ -29,12 +29,14 @@
 # Sun Jan 22 22:19:50 CET 2017 - mayer - set fit quiet only for gnuplot above 4.6 
 # Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9 
 # Sun Jun  4 13:46:50 CEST 2017 - mayer - check XRANGE 
+# Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE 
+
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
-export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT
+export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH 
 
 
 AWK=gawk
@@ -63,7 +65,7 @@ AVGFILE=/tmp/ntp_shps_average
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 06 04 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 07 07 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -102,7 +104,7 @@ thisusage(){
     exit 1
 }
 
-# no limitation for the x-range , can be overwritten with -y
+# no limitation for the x-range , can be overwritten with -x
 XRANGE='[-0.5:24.8]'
 # no limitation for the y-range , can be overwritten with -y
 YRANGE='[*:*]'
@@ -262,6 +264,10 @@ if test $? -ne 0
     exit 1
 fi
 
+# split XRANGE into 2 parts 
+XLOW=`echo $XRANGE | tr '[:]' '   ' | $AWK '{ print $1 }'`
+XHIGH=`echo $XRANGE | tr '[:]' '   ' | $AWK '{ print $2 }'`
+
 # check where the conf file is located
 CONF=N
 if test -f /etc/ntp.conf
@@ -318,10 +324,13 @@ DAYS=`ls  $STATSFILEPATH | wc -l | $AWK '{ print $1 }'`
 # peerstats column 2 are seconds after midnight 
 # myarray enhaelt anzahl gefundenet zeilen pro stunde 
 
+# calculation only if seconds ( column 2 ) are between xlow and xhigh 
+
 if test $DTYPE == s 
   then 
     # show success graph 
     cat $STATSFILEPATH | \
+    $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
@@ -345,6 +354,7 @@ if test $DTYPE == i
   then 
     # show graph with intervals 
     cat $STATSFILEPATH | \
+    $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
@@ -384,6 +394,7 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
 	  exit 1 ;; 
     esac 
     cat $STATSFILEPATH | \
+    $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
     grep $IP1 | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
       BEGIN {
