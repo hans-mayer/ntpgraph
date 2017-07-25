@@ -30,13 +30,15 @@
 # Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9 
 # Sun Jun  4 13:46:50 CEST 2017 - mayer - check XRANGE 
 # Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE 
+# Tue Jul 25 09:44:47 CEST 2017 - mayer - option -M offset with precalculated average 
 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
-export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH 
+export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH MOFFSET
+export CALCOFFSET 
 
 
 AWK=gawk
@@ -65,11 +67,11 @@ AVGFILE=/tmp/ntp_shps_average
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 07 07 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 07 24 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
-    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max ] [ -c ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
+    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
@@ -85,6 +87,7 @@ thisusage(){
     echo "       -y range    - low:high, example -0.1:0.1 , default autorange "
     echo "       -t value    - timestemps per hour - default 1 "
     echo "       -w value    - line width "
+    echo "       -M offset   - offset values for calculation, based on precalcualted offset instead of -m "
     echo "       -m min max  - minimum and maximum values for calculation, only for next 4 options below "
     echo "       -o          - show offset from peerstats file - column 5 "
     echo "       -r          - show roundtrip delay from peerstats file - column 6 "
@@ -137,6 +140,7 @@ while test $# -gt $ARGC -o do_once -eq 1
            XTICS=2
            echo $FILE ; shift ; shift ;;
       -m ) MIN=$2 ; MAX=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -m $MIN $MAX" ;; 
+      -M ) MOFFSET=$2 ; SHOWOPT="$SHOWOPT -M $2" ; shift ; shift ;;
       -w ) LINEWIDTH=$2 ; shift ; shift ;; 
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;;
       -b ) LBLPOS=0.1 ; shift ;; 
@@ -376,6 +380,75 @@ if test $DTYPE == i
               printf ( "%.4f %.2f %.2f \n", myarraytime[i], myarrayint[i], AVERAGE ) ;
       }' > $LIST
 fi
+
+# some simple tests for option -M 
+if test -n "$MOFFSET" 
+  then
+    # must be a positive number like 0.005 
+    echo "$MOFFSET" | $AWK '{ if ( $1 > 0.0 ) { exit 0 } else exit 1 }' 
+    if test $? -ne 0
+      then
+        echo
+        echo "option -M must have a positive number as argument, for example 0.0005 " 
+        thisusage
+        exit 1
+    fi
+    # option -m is not allowed if -M is used 
+    if test -n "$MIN" -o -n "$MAX" 
+      then
+        echo
+        echo "option -M excludes option -m "
+        thisusage
+        exit 1
+    fi
+fi
+
+# calculate the average value - this will be the base for min/max calculation 
+if test -n "$MOFFSET" 
+  then
+    if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O -o $DTYPE == D -o $DTYPE == E -o $DTYPE == S -o $DTYPE == P
+      then 
+        # show offset / delay graph 
+        case $DTYPE in 
+          o ) COLUMN=5 ;; 
+          r ) COLUMN=6 ;; 
+          d ) COLUMN=7 ;; 
+          j ) COLUMN=8 ;; 
+          O ) COLUMN=3 ; IP1=. ;; 
+          D ) COLUMN=4 ; IP1=. ;; 
+          E ) COLUMN=5 ; IP1=. ;; 
+          S ) COLUMN=6 ; IP1=. ;; 
+          P ) COLUMN=7 ; IP1=. ;; 
+          * ) echo "$0: fatal program error " 1>&2 
+    	  exit 1 ;; 
+        esac 
+        CALCOFFSET=`cat $STATSFILEPATH | \
+        $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
+        grep $IP1 | \
+        $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
+          BEGIN {
+            AVERAGE = 0 ;
+            INTERVALL = 0 ;
+            CNT4INT = 0 ;
+          }
+          { 
+    	   myarrayoffset[CNT4INT] = $COLUMN
+    	   myarraytime[CNT4INT] = $2/3600.0 ; 
+    	   AVERAGE += $COLUMN ; 
+               CNT4INT++ ; 
+          } 
+          END { 
+            if ( CNT4INT > 0 ) {
+              AVERAGE /= CNT4INT ; 
+            } ; 
+            printf ( "%.8f \n", AVERAGE ) ;
+          }' `
+    fi
+    MIN=`echo $CALCOFFSET $MOFFSET | $AWK '{ print ( $1 - $2 ) }'`
+    MAX=`echo $CALCOFFSET $MOFFSET | $AWK '{ print ( $1 + $2 ) }'`
+    : echo $CALCOFFSET $MIN $MAX
+fi
+
 
 if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O -o $DTYPE == D -o $DTYPE == E -o $DTYPE == S -o $DTYPE == P
   then 
