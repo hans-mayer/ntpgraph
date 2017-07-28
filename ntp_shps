@@ -31,6 +31,7 @@
 # Sun Jun  4 13:46:50 CEST 2017 - mayer - check XRANGE 
 # Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE 
 # Tue Jul 25 09:44:47 CEST 2017 - mayer - option -M offset with precalculated average 
+# Fri Jul 28 10:07:31 CEST 2017 - mayer - date could be like this '072[6-7]' 
 
 
 
@@ -67,7 +68,7 @@ AVGFILE=/tmp/ntp_shps_average
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 07 24 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 07 28 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -219,8 +220,9 @@ fi
 # if date field is a valid filename, use it as datasource
 # otherwise perform rudimentary date check
 TITLEHOST=$(uname -n)
+# this is also allowed 012[3-4] 
 case "$MDATE" in 
-  [0-9\?][0-9\?][0-9\?][0-9\?] ) 
+  [0-9\?][0-9\?][0-9\?][0-9\?] | [0-9\?][0-9\?][0-9\?]\[[0-9]-[0-9]\] ) 
         SELDATE=$YEAR$MDATE ;;
   [12][90][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?] )
         SELDATE=$MDATE ;;

@@ -19,7 +19,7 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2017 07 24
+    show NTP peerstats or loopstats values as graph  - v 2017 07 28
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
