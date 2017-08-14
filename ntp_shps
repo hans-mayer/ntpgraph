@@ -1,5 +1,6 @@
 #!/usr/bin/env ksh
 
+
 # Sat Feb 28 21:21:50 CET 2015 - mayer 
 # Sun Mar 29 22:22:12 CEST 2015 - mayer - optimized arg parser , $YEAR
 # Thu Apr  2 21:41:45 CEST 2015 - mayer - average u poll interval
@@ -32,6 +33,7 @@
 # Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE 
 # Tue Jul 25 09:44:47 CEST 2017 - mayer - option -M offset with precalculated average 
 # Fri Jul 28 10:07:31 CEST 2017 - mayer - date could be like this '072[6-7]' 
+# Mon Aug 14 19:32:49 CEST 2017 - mayer - queue output of several days / option -q 
 
 
 
@@ -39,7 +41,7 @@ export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINE
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
 export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH MOFFSET
-export CALCOFFSET 
+export CALCOFFSET QUDAYS QUDYCNT DEFXMAX 
 
 
 AWK=gawk
@@ -63,12 +65,15 @@ UNIQARGCNT=0 	# unique arguments can apear only once
 STATSTYPE=peerstats
 ARGC=2		# ip-addr and date for peerstats
 AVGFILE=/tmp/ntp_shps_average
-
+DEBUGOPT=0
+QUDAYS=0
+QUDYCNT=1
+DEFXMAX=24.8
 
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 07 28 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 14 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -84,12 +89,13 @@ thisusage(){
     echo "       -A          - save average result in file $AVGFILE / only with -a option usefull "
     echo "       -l          - straight line instead of smooth csplines "
     echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
-    echo "       -x range    - low:high, example 1:10.75 , default autorange -0.5:24.8 "
+    echo "       -x range    - low:high, example 1:10.75 , default autorange -0.5:$DEFXMAX "
     echo "       -y range    - low:high, example -0.1:0.1 , default autorange "
     echo "       -t value    - timestemps per hour - default 1 "
     echo "       -w value    - line width "
     echo "       -M offset   - offset values for calculation, based on precalcualted offset instead of -m "
     echo "       -m min max  - minimum and maximum values for calculation, only for next 4 options below "
+    echo "       -q          - queued days - multiple days are not overlapped "
     echo "       -o          - show offset from peerstats file - column 5 "
     echo "       -r          - show roundtrip delay from peerstats file - column 6 "
     echo "       -d          - show dispersion from peerstats file - column 7 "
@@ -109,14 +115,14 @@ thisusage(){
 }
 
 # no limitation for the x-range , can be overwritten with -x
-XRANGE='[-0.5:24.8]'
+XRANGE="[-0.5:$DEFXMAX]"
 # no limitation for the y-range , can be overwritten with -y
 YRANGE='[*:*]'
 # check the arguments
 LOOPCNT=0
 # go at least 1 time into the loop / there is no do until 
 do_once=1
-while test $# -gt $ARGC -o do_once -eq 1
+while test $# -gt $ARGC -o $do_once -eq 1
   do
     do_once=0
     case $1 in
@@ -152,6 +158,7 @@ while test $# -gt $ARGC -o do_once -eq 1
       -E ) DTYPE=E ; LINES="" ; YLBL='estimated error' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -S ) DTYPE=S ; LINES="" ; YLBL='stability' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -P ) DTYPE=P ; LINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -q ) QUDAYS=1 ; shift ;;
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt $ARGC
@@ -181,7 +188,7 @@ case $DTYPE in
     exit 1
     ;; 
   i|o|d|r|j|O|D|E|S|P ) 
-    if test CNTONLY -eq 1 
+    if test $CNTONLY -eq 1 
       then 
         echo 1>&2
         echo "option -c not valid in combination with -i, -o, -d, -r or -j " 1>&2 
@@ -405,52 +412,70 @@ if test -n "$MOFFSET"
     fi
 fi
 
+
 # calculate the average value - this will be the base for min/max calculation 
+# and calculate the number of days 
+
+if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O -o $DTYPE == D -o $DTYPE == E -o $DTYPE == S -o $DTYPE == P
+  then 
+    # show offset / delay graph 
+    case $DTYPE in 
+      o ) COLUMN=5 ;; 
+      r ) COLUMN=6 ;; 
+      d ) COLUMN=7 ;; 
+      j ) COLUMN=8 ;; 
+      O ) COLUMN=3 ; IP1=. ;; 
+      D ) COLUMN=4 ; IP1=. ;; 
+      E ) COLUMN=5 ; IP1=. ;; 
+      S ) COLUMN=6 ; IP1=. ;; 
+      P ) COLUMN=7 ; IP1=. ;; 
+      * ) echo "$0: fatal program error " 1>&2 
+	  exit 1 ;; 
+    esac 
+    RESULT2ARG=`cat $STATSFILEPATH | \
+    $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
+    grep $IP1 | \
+    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
+      BEGIN {
+        AVERAGE = 0 ;
+        INTERVALL = 0 ;
+        CNT4INT = 0 ;
+        QUDYCNT = 1 ; 
+        LASTSECOND = 0 ; 
+      }
+      { 
+        if ( LASTSECOND > $2 ) { QUDYCNT++ } ; 
+        LASTSECOND = $2 ; 
+	myarrayoffset[CNT4INT] = $COLUMN
+	myarraytime[CNT4INT] = $2/3600.0 ; 
+	AVERAGE += $COLUMN ; 
+        CNT4INT++ ; 
+      } 
+      END { 
+        if ( CNT4INT > 0 ) {
+          AVERAGE /= CNT4INT ; 
+        } ; 
+        printf ( "dummyvalue %.8f %d \n", AVERAGE , QUDYCNT ) ;
+      }' `
+fi
+# set with negative number as first argument does not work 
+: echo $RESULT2ARG
+set $RESULT2ARG 
+CALCOFFSET=$2 
+QUDYCNT=$3 
+: echo $CALCOFFSET $MIN $MAX $QUDYCNT
+
 if test -n "$MOFFSET" 
   then
-    if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O -o $DTYPE == D -o $DTYPE == E -o $DTYPE == S -o $DTYPE == P
-      then 
-        # show offset / delay graph 
-        case $DTYPE in 
-          o ) COLUMN=5 ;; 
-          r ) COLUMN=6 ;; 
-          d ) COLUMN=7 ;; 
-          j ) COLUMN=8 ;; 
-          O ) COLUMN=3 ; IP1=. ;; 
-          D ) COLUMN=4 ; IP1=. ;; 
-          E ) COLUMN=5 ; IP1=. ;; 
-          S ) COLUMN=6 ; IP1=. ;; 
-          P ) COLUMN=7 ; IP1=. ;; 
-          * ) echo "$0: fatal program error " 1>&2 
-    	  exit 1 ;; 
-        esac 
-        CALCOFFSET=`cat $STATSFILEPATH | \
-        $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
-        grep $IP1 | \
-        $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
-          BEGIN {
-            AVERAGE = 0 ;
-            INTERVALL = 0 ;
-            CNT4INT = 0 ;
-          }
-          { 
-    	   myarrayoffset[CNT4INT] = $COLUMN
-    	   myarraytime[CNT4INT] = $2/3600.0 ; 
-    	   AVERAGE += $COLUMN ; 
-               CNT4INT++ ; 
-          } 
-          END { 
-            if ( CNT4INT > 0 ) {
-              AVERAGE /= CNT4INT ; 
-            } ; 
-            printf ( "%.8f \n", AVERAGE ) ;
-          }' `
-    fi
     MIN=`echo $CALCOFFSET $MOFFSET | $AWK '{ print ( $1 - $2 ) }'`
     MAX=`echo $CALCOFFSET $MOFFSET | $AWK '{ print ( $1 + $2 ) }'`
-    : echo $CALCOFFSET $MIN $MAX
 fi
 
+if test $QUDYCNT -ne 1 
+  then
+    XRANGE=`echo $QUDYCNT | $AWK '{ printf ( "[-0.5:%.1f] \n" , $1 * 24 + 0.8 ) }'`
+    : echo XRANGE $XRANGE
+fi 
 
 if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O -o $DTYPE == D -o $DTYPE == E -o $DTYPE == S -o $DTYPE == P
   then 
@@ -471,22 +496,30 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
     cat $STATSFILEPATH | \
     $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
     grep $IP1 | \
-    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
+    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX -v QUDAYS=$QUDAYS '
       BEGIN {
         AVERAGE = 0 ;
         INTERVALL = 0 ;
         CNT4INT = 0 ;
+        QUDYCNT = 0 ; 
+        LASTSECOND = 0 ; 
       }
       { 
+         if ( LASTSECOND > $2/3600 ) { 
+           if ( QUDAYS == 1 ) {
+             QUDYCNT++ ; 
+           } 
+         } 
+         LASTSECOND = $2/3600.0 ; 
          if ( ( MIN == "" ) && ( MAX == "" ) ) {  
 	   myarrayoffset[CNT4INT] = $COLUMN
-	   myarraytime[CNT4INT] = $2/3600.0 ; 
+	   myarraytime[CNT4INT] = LASTSECOND + QUDYCNT * 24.0 ; 
 	   AVERAGE += $COLUMN ; 
            CNT4INT++ ; 
          } else { 
            if ( ( $COLUMN >= MIN ) && ( $COLUMN <= MAX ) ) {
              myarrayoffset[CNT4INT] = $COLUMN
-             myarraytime[CNT4INT] = $2/3600.0 ;
+             myarraytime[CNT4INT] = LASTSECOND + QUDYCNT * 24.0 ;
              AVERAGE += $COLUMN ;
              CNT4INT++ ;
            }
@@ -504,6 +537,10 @@ fi
 if test ! -s $LIST
   then
     echo "$0: error - file $LIST not generated - program terminated " 1>&2
+    if test "$DEBUG" == n
+      then 
+        rm -f $LIST 
+    fi
     exit 1
 fi
 
@@ -575,6 +612,9 @@ if test -n "$FFIT"
     esac 
 fi
 
+# if there are multiple days a bigger interval of xtics 
+XTICS=$((XTICS*QUDYCNT)) 
+
 gnuplot << EOF
   $STERM
   $FILE
@@ -601,7 +641,7 @@ EOF
 
 if test "$AVGTOFILE" = y 
   then 
-    echo "$AVG"  | grep aver | awk '{ print $3 }' > $AVGFILE 
+    echo "$AVG"  | grep aver | $AWK '{ print $3 }' > $AVGFILE 
 fi 
 
 if test "$DEBUG" == y

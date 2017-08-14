@@ -19,7 +19,7 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2017 07 28
+    show NTP peerstats or loopstats values as graph  - v 2017 08 14
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
@@ -41,6 +41,7 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
        -w value    - line width
        -M offset   - offset values for calculation, based on precalcualted offset instead of -m
        -m min max  - minimum and maximum values for calculation, only for next 4 options below
+       -q          - queued days - multiple days are not overlapped 
        -o          - show offset from peerstats file - column 5
        -r          - show roundtrip delay from peerstats file - column 6
        -d          - show dispersion from peerstats file - column 7
