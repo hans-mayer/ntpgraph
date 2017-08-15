@@ -19,11 +19,11 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2017 08 14
+    show NTP peerstats or loopstats values as graph  - v 2017 08 15
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
-    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c value ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC
+    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c value ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC
        DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday)
        DATESPEC may also be path to peerstats/loopstats file
        IP address  - only for peerstats graph, not for loopstats
@@ -125,7 +125,7 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted for 
 
     # ntp_shdiff
 
-    show time difference for 2 NTP server as graph - v 2017 07 07
+    show time difference for 2 NTP server as graph - v 2017 08 15
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
@@ -180,7 +180,7 @@ with ntptconv
 
     # ntp_shavail
 
-    show NTP available peers as graph  - v 2017 04 16
+    show NTP available peers as graph  - v 2017 08 15
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 

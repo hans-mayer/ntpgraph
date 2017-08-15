@@ -9,7 +9,7 @@
 # Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9
 # Sun Apr 16 12:12:11 CEST 2017 - mayer - option n / noselect
 # Friday, June 30, 2017 10:22:31 AM CEST - mayer - rm NOTSELECTED
-
+# Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
@@ -28,7 +28,7 @@ NOSELECT=n
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2017 06 30 "
+    echo "show NTP available peers as graph  - v 2017 08 15 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
@@ -45,7 +45,7 @@ thisusage(){
 LOOPCNT=0
 # go at least 1 time into the loop / there is no do until
 do_once=1
-while test $# -gt $MINARGS -o do_once -eq 1
+while test $# -gt $MINARGS -o $do_once -eq 1
   do
     do_once=0
     case $1 in

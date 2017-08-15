@@ -73,11 +73,11 @@ DEFXMAX=24.8
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 14 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 15 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
-    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
+    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
@@ -564,7 +564,7 @@ if test $? -eq 0
     MYIPIS="$TITLEHOST"
 fi
 
-# IP1 ist . fuer loopstats file 
+# IP1 is . for loopstats file 
 if test "$IP1" == '.' 
   then 
     TITLE="$MYIPIS $STATSTYPE - ${SELDATE:-} "
@@ -616,8 +616,12 @@ if test -n "$FFIT"
     esac 
 fi
 
-# if there are multiple days a bigger interval of xtics 
-XTICS=$((XTICS*QUDYCNT)) 
+# only for option -q 
+if test $QUDAYS -eq 1 
+  then 
+    # if there are multiple days a bigger interval of xtics 
+    XTICS=$((XTICS*QUDYCNT)) 
+fi
 
 gnuplot << EOF
   $STERM

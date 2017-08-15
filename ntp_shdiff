@@ -27,6 +27,7 @@
 # Sat Jan 28 21:26:21 CET 2017 - mayer - debug option Z with argument 1 or 9
 # Sun Jun  4 13:46:50 CEST 2017 - mayer - check XRANGE
 # Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE
+# Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
@@ -56,7 +57,7 @@ LBLPOS=0.95
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP server as graph - v 2017 07 07 "
+    echo "show time difference for 2 NTP server as graph - v 2017 08 15 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
@@ -93,7 +94,7 @@ YRANGE='[*:*]'
 LOOPCNT=0
 : echo argc: $# 
 do_once=1
-while test $# -gt 3 -o do_once -eq 1
+while test $# -gt 3 -o $do_once -eq 1
   do
     : echo argc: $# 
     do_once=0
