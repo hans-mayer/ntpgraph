@@ -34,6 +34,7 @@
 # Tue Jul 25 09:44:47 CEST 2017 - mayer - option -M offset with precalculated average 
 # Fri Jul 28 10:07:31 CEST 2017 - mayer - date could be like this '072[6-7]' 
 # Mon Aug 14 19:32:49 CEST 2017 - mayer - queue output of several days / option -q 
+# Wed Aug 16 21:01:03 CEST 2017 - mayer - bugfix 
 
 
 
@@ -41,9 +42,9 @@ export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINE
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
 export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH MOFFSET
-export CALCOFFSET QUDAYS QUDYCNT DEFXMAX 
+export CALCOFFSET QUDAYS QUDYCNT DEFXMAX PROGNAME 
 
-
+PROGNAME=$0
 AWK=gawk
 TIMESPERH=1
 CNTONLY=0
@@ -73,11 +74,11 @@ DEFXMAX=24.8
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 15 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 16 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
-    echo "usage: $0 [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
+    echo "usage: $PROGNAME [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
@@ -216,7 +217,7 @@ if test $# -eq 2
     case "$IP1" in
       [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;;
       [1-9]*:* ) ;; 
-      * )   echo $0: bad IP address: "$IP1" 1>&2 
+      * )   echo $PROGNAME: bad IP address: "$IP1" 1>&2 
 	    thisusage
             exit 1 ;;
     esac
@@ -240,7 +241,7 @@ case "$MDATE" in
 		STATSFILEPATH=$MDATE
 		TITLEHOST=$(basename $STATSFILEPATH)
         else
-	    echo "$0: wrong date format - must be one of {MMDD | YYYYMMDD | . | - } or a filename" 1>&2
+	    echo "$PROGNAME: wrong date format - must be one of {MMDD | YYYYMMDD | . | - } or a filename" 1>&2
 		thisusage
 		exit 1
         fi
@@ -293,7 +294,7 @@ if test -f /etc/inet/ntp.conf
 fi
 if test $CONF = N
   then
-    echo $0: ntp.conf not found
+    echo $PROGNAME: ntp.conf not found
     exit 1
 fi
 
@@ -327,12 +328,12 @@ fi
 
 if test ! -f $STATSFILEPATH 
   then 
-    echo $0: file $STATSFILEPATH not found 
+    echo $PROGNAME: file $STATSFILEPATH not found 
     exit 1 
 fi 
 
 DAYS=`ls  $STATSFILEPATH | wc -l | $AWK '{ print $1 }'` 
-: echo 
+: echo DAYS $DAYS 
 
 # peerstats column 2 are seconds after midnight 
 # myarray enhaelt anzahl gefundenet zeilen pro stunde 
@@ -429,7 +430,7 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
       E ) COLUMN=5 ; IP1=. ;; 
       S ) COLUMN=6 ; IP1=. ;; 
       P ) COLUMN=7 ; IP1=. ;; 
-      * ) echo "$0: fatal program error " 1>&2 
+      * ) echo "$PROGNAME: fatal program error " 1>&2 
 	  exit 1 ;; 
     esac 
     RESULT2ARG=`cat $STATSFILEPATH | \
@@ -460,10 +461,13 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
 fi
 # set with negative number as first argument does not work 
 : echo $RESULT2ARG
-set $RESULT2ARG 
-CALCOFFSET=$2 
-QUDYCNT=$3 
-: echo $CALCOFFSET $MIN $MAX $QUDYCNT
+if test -n "$RESULT2ARG" 
+  then 
+    set $RESULT2ARG 
+    CALCOFFSET=$2 
+    QUDYCNT=$3 
+    : echo $CALCOFFSET $MIN $MAX $QUDYCNT
+fi
 
 if test -n "$MOFFSET" 
   then
@@ -494,7 +498,7 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
       E ) COLUMN=5 ; IP1=. ;; 
       S ) COLUMN=6 ; IP1=. ;; 
       P ) COLUMN=7 ; IP1=. ;; 
-      * ) echo "$0: fatal program error " 1>&2 
+      * ) echo "$PROGNAME: fatal program error " 1>&2 
 	  exit 1 ;; 
     esac 
     cat $STATSFILEPATH | \
@@ -540,7 +544,7 @@ fi
 
 if test ! -s $LIST
   then
-    echo "$0: error - file $LIST not generated - program terminated " 1>&2
+    echo "$PROGNAME: error - file $LIST not generated - program terminated " 1>&2
     if test "$DEBUG" == n
       then 
         rm -f $LIST 
