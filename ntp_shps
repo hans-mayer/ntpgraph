@@ -35,6 +35,7 @@
 # Fri Jul 28 10:07:31 CEST 2017 - mayer - date could be like this '072[6-7]' 
 # Mon Aug 14 19:32:49 CEST 2017 - mayer - queue output of several days / option -q 
 # Wed Aug 16 21:01:03 CEST 2017 - mayer - bugfix 
+# Wed Aug 23 20:58:31 CEST 2017 - mayer - bugfix SELDATINFO 
 
 
 
@@ -42,7 +43,7 @@ export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINE
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
 export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH MOFFSET
-export CALCOFFSET QUDAYS QUDYCNT DEFXMAX PROGNAME 
+export CALCOFFSET QUDAYS QUDYCNT DEFXMAX PROGNAME SELDATE SELDATINFO
 
 PROGNAME=$0
 AWK=gawk
@@ -74,7 +75,7 @@ DEFXMAX=24.8
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 16 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 23 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -231,15 +232,15 @@ TITLEHOST=$(uname -n)
 # this is also allowed 012[3-4] 
 case "$MDATE" in 
   [0-9\?][0-9\?][0-9\?][0-9\?] | [0-9\?][0-9\?][0-9\?]\[[0-9]-[0-9]\] ) 
-        SELDATE=$YEAR$MDATE ;;
+        SELDATE=$YEAR$MDATE ; SELDATINFO=$SELDATE ;;
   [12][90][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?][0-9\?] )
-        SELDATE=$MDATE ;;
-  \. )  SELDATE=`TZ=GMT date +%Y%m%d` ;;
-  - )   SELDATE=`TZ=GMT+24 date +%Y%m%d` ;;
+        SELDATE=$MDATE ; SELDATINFO=$SELDATE ;;
+  \. )  SELDATE=`TZ=GMT date +%Y%m%d` ; SELDATINFO=$SELDATE ;;
+  - )   SELDATE=`TZ=GMT+24 date +%Y%m%d` ; SELDATINFO=$SELDATE ;;
   * )   if [ -f "$MDATE" ]
         then
 		STATSFILEPATH=$MDATE
-		TITLEHOST=$(basename $STATSFILEPATH)
+		SELDATINFO=$(basename $STATSFILEPATH)
         else
 	    echo "$PROGNAME: wrong date format - must be one of {MMDD | YYYYMMDD | . | - } or a filename" 1>&2
 		thisusage
@@ -571,16 +572,16 @@ fi
 # IP1 is . for loopstats file 
 if test "$IP1" == '.' 
   then 
-    TITLE="$MYIPIS $STATSTYPE - ${SELDATE:-} "
+    TITLE="$MYIPIS $STATSTYPE - ${SELDATINFO:-} "
   else 
     # if getent does not exist $HOST1 is empty 
     HOST1=`getent hosts $IP1 2> /dev/null | $AWK '{ print $2 }'`
     # if reverse lookup does not work take the IP
     if test -z "$HOST1"
       then
-        TITLE="$MYIPIS $STATSTYPE - $IP1 - ${SELDATE:-} "
+        TITLE="$MYIPIS $STATSTYPE - $IP1 - ${SELDATINFO:-} "
       else 
-        TITLE="$MYIPIS $STATSTYPE - $IP1 - $HOST1 - ${SELDATE:-} "
+        TITLE="$MYIPIS $STATSTYPE - $IP1 - $HOST1 - ${SELDATINFO:-} "
     fi
 fi
 
