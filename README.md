@@ -23,7 +23,7 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
-    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c value ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC
+    usage: ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c value ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC
        DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday)
        DATESPEC may also be path to peerstats/loopstats file
        IP address  - only for peerstats graph, not for loopstats
@@ -130,7 +130,7 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted for 
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
-    usage: /uni/bin/ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] [ -D 1|9 ] IP1 IP2 DATESPEC
+    usage: ntp_shdiff [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] [ -D 1|9 ] IP1 IP2 DATESPEC
        DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday)
        DATESPEC can also be path to peerstats file
        -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours
@@ -185,7 +185,7 @@ with ntptconv
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
-    usage: /uni/bin/ntp_shavail [ -n ] [ -D 1|9 ] [ -f IMG ] DATE
+    usage: ntp_shavail [ -n ] [ -D 1|9 ] [ -f IMG ] DATE
        date is MMDD in year 2017 or YYYYMMDD or . or - ( . is today, - is yesterday  )
        -f IMG      - output to file - IMG can be jpeg, png, ...
        -n          - don't take server marked as noselect
