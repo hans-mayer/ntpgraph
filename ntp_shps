@@ -36,6 +36,7 @@
 # Mon Aug 14 19:32:49 CEST 2017 - mayer - queue output of several days / option -q 
 # Wed Aug 16 21:01:03 CEST 2017 - mayer - bugfix 
 # Wed Aug 23 20:58:31 CEST 2017 - mayer - bugfix SELDATINFO 
+# Sun Sep 10 20:01:21 CEST 2017 - mayer - NVALUE 
 
 
 
@@ -43,7 +44,7 @@ export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINE
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
 export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH MOFFSET
-export CALCOFFSET QUDAYS QUDYCNT DEFXMAX PROGNAME SELDATE SELDATINFO
+export CALCOFFSET QUDAYS QUDYCNT DEFXMAX PROGNAME SELDATE SELDATINFO NVALUE
 
 PROGNAME=$0
 AWK=gawk
@@ -71,15 +72,17 @@ DEBUGOPT=0
 QUDAYS=0
 QUDYCNT=1
 DEFXMAX=24.8
+NVALUE=1 
+
 
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 08 23 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 09 10 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
-    echo "usage: $PROGNAME [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
+    echo "usage: $PROGNAME [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
@@ -97,6 +100,7 @@ thisusage(){
     echo "       -w value    - line width "
     echo "       -M offset   - offset values for calculation, based on precalcualted offset instead of -m "
     echo "       -m min max  - minimum and maximum values for calculation, only for next 4 options below "
+    echo "       -N value    - take each n'th record for calculation , default each record = 1 "
     echo "       -q          - queued days - multiple days are not overlapped "
     echo "       -o          - show offset from peerstats file - column 5 "
     echo "       -r          - show roundtrip delay from peerstats file - column 6 "
@@ -161,6 +165,7 @@ while test $# -gt $ARGC -o $do_once -eq 1
       -S ) DTYPE=S ; LINES="" ; YLBL='stability' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -P ) DTYPE=P ; LINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -q ) QUDAYS=1 ; shift ;;
+      -N ) NVALUE=$2 ; shift ; shift ;;
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt $ARGC
@@ -194,6 +199,15 @@ case $DTYPE in
       then 
         echo 1>&2
         echo "option -c not valid in combination with -i, -o, -d, -r or -j " 1>&2 
+        thisusage
+        exit 1
+    fi
+    ;; 
+  s ) 
+    if test $NVALUE -gt 1 
+      then
+        echo 1>&2
+        echo "option -s not valid in combination with -N " 1>&2 
         thisusage
         exit 1
     fi
@@ -505,15 +519,20 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
     cat $STATSFILEPATH | \
     $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
     grep $IP1 | \
-    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX -v QUDAYS=$QUDAYS '
+    $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX -v QUDAYS=$QUDAYS -v NVALUE=$NVALUE '
       BEGIN {
         AVERAGE = 0 ;
         INTERVALL = 0 ;
         CNT4INT = 0 ;
         QUDYCNT = 0 ; 
         LASTSECOND = 0 ; 
+        NVALCNT = 0 ; 
       }
       { 
+         NVALCNT++ ; 
+         if ( ( NVALCNT % NVALUE ) != 0 ) { 
+           next ; 
+         } 
          if ( LASTSECOND > $2/3600 ) { 
            if ( QUDAYS == 1 ) {
              QUDYCNT++ ; 

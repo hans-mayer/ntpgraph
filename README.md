@@ -19,11 +19,11 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2017 08 23
+    show NTP peerstats or loopstats values as graph  - v 2017 09 10
       author: ntpgraph@ma.yer.at
       source: https://github.com/hans-mayer/ntpgraph
 
-    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -c value ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC
+    usage: /uni/bin/ntp_shps [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c value ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC
        DATESPEC is MMDD in year 2017 or YYYYMMDD or . (today) or - (yesterday)
        DATESPEC may also be path to peerstats/loopstats file
        IP address  - only for peerstats graph, not for loopstats
@@ -41,6 +41,7 @@ Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
        -w value    - line width
        -M offset   - offset values for calculation, based on precalcualted offset instead of -m
        -m min max  - minimum and maximum values for calculation, only for next 4 options below
+       -N value    - take each n'th record for calculation , default each record = 1 
        -q          - queued days - multiple days are not overlapped 
        -o          - show offset from peerstats file - column 5
        -r          - show roundtrip delay from peerstats file - column 6
