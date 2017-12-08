@@ -37,6 +37,7 @@
 # Wed Aug 16 21:01:03 CEST 2017 - mayer - bugfix 
 # Wed Aug 23 20:58:31 CEST 2017 - mayer - bugfix SELDATINFO 
 # Sun Sep 10 20:01:21 CEST 2017 - mayer - NVALUE 
+# Fri Dec  8 11:43:31 CET 2017 - mayer - showing NVALUE in header line 
 
 
 
@@ -78,7 +79,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 09 10 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2017 12 08 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -165,7 +166,7 @@ while test $# -gt $ARGC -o $do_once -eq 1
       -S ) DTYPE=S ; LINES="" ; YLBL='stability' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -P ) DTYPE=P ; LINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -q ) QUDAYS=1 ; shift ;;
-      -N ) NVALUE=$2 ; shift ; shift ;;
+      -N ) NVALUE=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -N $NVALUE" ;;
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt $ARGC
