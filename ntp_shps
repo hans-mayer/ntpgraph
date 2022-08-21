@@ -38,6 +38,7 @@
 # Wed Aug 23 20:58:31 CEST 2017 - mayer - bugfix SELDATINFO 
 # Sun Sep 10 20:01:21 CEST 2017 - mayer - NVALUE 
 # Fri Dec  8 11:43:31 CET 2017 - mayer - showing NVALUE in header line 
+# Sun 21 Aug 2022 08:47:26 PM CEST - mayer - bugfix XRANGE 
 
 
 
@@ -79,7 +80,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2017 12 08 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2022 08 21 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -122,7 +123,7 @@ thisusage(){
 }
 
 # no limitation for the x-range , can be overwritten with -x
-XRANGE="[-0.5:$DEFXMAX]"
+XRANGE="-0.5:$DEFXMAX"
 # no limitation for the y-range , can be overwritten with -y
 YRANGE='[*:*]'
 # check the arguments
@@ -136,7 +137,7 @@ while test $# -gt $ARGC -o $do_once -eq 1
       -t ) TIMESPERH=$2 ; shift ; shift ;;
       -c ) CNTONLY=1 ; YLBL=count ; shift ;; 
       -l ) LINES="with lines" ; shift ;;
-      -x ) XRANGE="[$2]" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
+      -x ) XRANGE="$2" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
       -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -y $2" ; shift ; shift ;;
       -p ) POLL=$2 ; shift ; shift ;;
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
@@ -284,19 +285,20 @@ if test $? -ne 0
     exit 1
 fi
 
+# echo  split XRANGE into 2 parts 
+XLOW=`echo $XRANGE | tr ':' ' ' | $AWK '{ print $1 }'`
+XHIGH=`echo $XRANGE | tr ':' ' ' | $AWK '{ print $2 }'`
+
+# echo XLOW: $XLOW / XHIGH: $XHIGH 
 # check XRANGE low value smaller than high value 
-echo $XRANGE | tr '[:]' '   ' | $AWK '{ if ( $1 >= $2 )  { exit 1 } else exit 0  }' 
-if test $? -ne 0
+if test $XLOW -ge $XHIGH 
   then 
     echo 
-    echo "xrange low < high, example 1:10.75 "
+    echo "xrange low < high, example 1:10.75 , current value $XRANGE "  
+    # echo $XRANGE | tr ':' ' '  
     thisusage
     exit 1
 fi
-
-# split XRANGE into 2 parts 
-XLOW=`echo $XRANGE | tr '[:]' '   ' | $AWK '{ print $1 }'`
-XHIGH=`echo $XRANGE | tr '[:]' '   ' | $AWK '{ print $2 }'`
 
 # check where the conf file is located
 CONF=N
@@ -496,7 +498,7 @@ if test $QUDAYS -eq 1
   then 
     if test $QUDYCNT -ne 1 
       then
-        XRANGE=`echo $QUDYCNT | $AWK '{ printf ( "[-0.5:%.1f] \n" , $1 * 24 + 0.8 ) }'`
+        XRANGE=`echo $QUDYCNT | $AWK '{ printf ( "-0.5:%.1f \n" , $1 * 24 + 0.8 ) }'`
         : echo XRANGE $XRANGE
     fi 
 fi 
@@ -655,7 +657,7 @@ gnuplot << EOF
   set xlabel "hour"
   set ylabel "$YLBL"
   set xtics $XTICS
-  set xrange $XRANGE
+  set xrange [$XRANGE]
   set yrange $YRANGE
   set style line 1 linewidth $LINEWIDTH
   set style line 2 linewidth $LINEWIDTH
