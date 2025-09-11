@@ -13,9 +13,10 @@
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
-export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT NOSELECT NOTSELECTED H SRV NOSELHOST
+export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT NOSELECT NOTSELECTED H SRV NOSELHOST PATH 
 
 
+PATH=$PATH:/usr/sbin
 AWK=gawk
 YEAR=`TZ=GMT date '+%Y'`
 DEBUG=n
@@ -129,6 +130,10 @@ fi
 if test -f /etc/inet/ntp.conf
   then
     CONF=/etc/inet/ntp.conf
+fi
+if test -f /etc/ntpsec/ntp.conf
+  then
+    CONF=/etc/ntpsec/ntp.conf
 fi
 if test $CONF = N
   then

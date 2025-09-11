@@ -310,6 +310,10 @@ if test -f /etc/inet/ntp.conf
   then
     CONF=/etc/inet/ntp.conf
 fi
+if test -f /etc/ntpsec/ntp.conf
+  then
+    CONF=/etc/ntpsec/ntp.conf
+fi
 if test $CONF = N
   then
     echo $PROGNAME: ntp.conf not found
