@@ -80,7 +80,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2022 08 21 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 14 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
