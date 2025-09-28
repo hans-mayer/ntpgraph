@@ -10,6 +10,7 @@
 # Sun Apr 16 12:12:11 CEST 2017 - mayer - option n / noselect
 # Friday, June 30, 2017 10:22:31 AM CEST - mayer - rm NOTSELECTED
 # Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
+# Sun 28 Sep 2025 10:55:55 PM CEST - mayer - option -C for config file 
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
@@ -29,19 +30,21 @@ NOSELECT=n
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2025 09 14 "
+    echo "show NTP available peers as graph  - v 2025 09 28 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
     echo "usage: $0 [ -n ] [ -D 1|9 ] [ -f IMG ] DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) " 
-    echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
-    echo "       -n          - don't take server marked as noselect "  
-    echo "       -D 1|9      - debug  1 ... less, 9 ... more "
+    echo "       -f IMG          - output to file - IMG can be jpeg, png, ... "
+    echo "       -C config-file  - overwrite searching the config file " 
+    echo "       -n              - don't take server marked as noselect "  
+    echo "       -D 1|9          - debug  1 ... less, 9 ... more "
     echo
     exit 1
 }
 
+CONF=""
 # check the arguments
 LOOPCNT=0
 # go at least 1 time into the loop / there is no do until
@@ -56,6 +59,7 @@ while test $# -gt $MINARGS -o $do_once -eq 1
            LINEWIDTH=1
            echo $FILE ; shift ; shift ;;
       -n ) NOSELECT=y ; shift ;;
+      -C ) shift ; CONF=$1 ; shift ;;
       - )  break ;;  # yesterday
       -* ) thisusage ; exit 1 ;;
     esac
@@ -121,25 +125,36 @@ if test $? -ne 0
     exit 1
 fi
 
-# check where the conf file is located
-CONF=N
-if test -f /etc/ntp.conf
-  then
-    CONF=/etc/ntp.conf
-fi
-if test -f /etc/inet/ntp.conf
-  then
-    CONF=/etc/inet/ntp.conf
-fi
-if test -f /etc/ntpsec/ntp.conf
-  then
-    CONF=/etc/ntpsec/ntp.conf
-fi
-if test $CONF = N
-  then
-    echo $0: ntp.conf not found
-    exit 1
-fi
+case "$CONF" in 
+  "" ) 
+      # check where the conf file is located
+      CONF=N
+      if test -f /etc/ntp.conf
+        then
+          CONF=/etc/ntp.conf
+      fi
+      if test -f /etc/inet/ntp.conf
+        then
+          CONF=/etc/inet/ntp.conf
+      fi
+      if test -f /etc/ntpsec/ntp.conf
+        then
+          CONF=/etc/ntpsec/ntp.conf
+      fi
+      if test $CONF = N
+        then
+          echo $0: file ntp.conf not found
+          exit 1
+      fi
+      ;; 
+  * ) 
+      if test ! -f $CONF 
+        then 
+          echo $0: configuration file $CONF does not exist 
+          exit 1 
+      fi
+      ;; 
+esac 
 
 # look what is statsdir directory and peerstats file defined
 # awk is needed for solaris to strip off the leading blanks
