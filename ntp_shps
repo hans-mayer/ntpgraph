@@ -39,6 +39,7 @@
 # Sun Sep 10 20:01:21 CEST 2017 - mayer - NVALUE 
 # Fri Dec  8 11:43:31 CET 2017 - mayer - showing NVALUE in header line 
 # Sun 21 Aug 2022 08:47:26 PM CEST - mayer - bugfix XRANGE 
+# Sun Sep 28 09:29:31 PM CEST 2025 - mayer - inform about GZ file 
 
 
 
@@ -80,7 +81,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 14 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 28 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -351,6 +352,10 @@ fi
 if test ! -f $STATSFILEPATH 
   then 
     echo $PROGNAME: file $STATSFILEPATH not found 
+    if test -f $STATSFILEPATH.gz 
+      then 
+        echo "but $STATSFILEPATH.gz is available - unzip this file first "
+    fi
     exit 1 
 fi 
 
