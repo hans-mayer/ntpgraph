@@ -30,11 +30,11 @@ NOSELECT=n
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2025 09 28 "
+    echo "show NTP available peers as graph  - v 2025 09 29 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
-    echo "usage: $0 [ -n ] [ -D 1|9 ] [ -f IMG ] DATE "
+    echo "usage: $0 [ -n ] [ -C path ] [ -D 1|9 ] [ -f IMG ] DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) " 
     echo "       -f IMG          - output to file - IMG can be jpeg, png, ... "
     echo "       -C config-file  - overwrite searching the config file " 

@@ -40,7 +40,7 @@
 # Fri Dec  8 11:43:31 CET 2017 - mayer - showing NVALUE in header line 
 # Sun 21 Aug 2022 08:47:26 PM CEST - mayer - bugfix XRANGE 
 # Sun Sep 28 09:29:31 PM CEST 2025 - mayer - inform about GZ file 
-
+# Mon Sep 29 08:25:41 PM CEST 2025 - mayer - option -C for config file
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
@@ -81,48 +81,51 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 28 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 29 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
-    echo "usage: $PROGNAME [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
+    echo "usage: $PROGNAME [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
-    echo "       -s          - success rate "
-    echo "       -p value    - poll interval used for calculation of success rate, default 64 "
-    echo "       -c          - y-axis is number and not percent , usefull for success rate "
-    echo "       -i          - interval between updates "
-    echo "       -a          - print average line "
-    echo "       -A          - save average result in file $AVGFILE / only with -a option usefull "
-    echo "       -l          - straight line instead of smooth csplines "
-    echo "       -f IMG      - output to file - IMG can be jpeg, png, ... "
-    echo "       -x range    - low:high, example 1:10.75 , default autorange -0.5:$DEFXMAX "
-    echo "       -y range    - low:high, example -0.1:0.1 , default autorange "
-    echo "       -t value    - timestemps per hour - default 1 "
-    echo "       -w value    - line width "
-    echo "       -M offset   - offset values for calculation, based on precalcualted offset instead of -m "
-    echo "       -m min max  - minimum and maximum values for calculation, only for next 4 options below "
-    echo "       -N value    - take each n'th record for calculation , default each record = 1 "
-    echo "       -q          - queued days - multiple days are not overlapped "
-    echo "       -o          - show offset from peerstats file - column 5 "
-    echo "       -r          - show roundtrip delay from peerstats file - column 6 "
-    echo "       -d          - show dispersion from peerstats file - column 7 "
-    echo "       -j          - show rms jitter from peerstats file - column 8 "
-    echo "       -F n        - fit function, n polynomial ( 1 or 2 )  "
-    echo "       -b          - label at bottom - only for fit function "
-    echo "       -Z 1|9      - debug  1 ... less, 9 ... more "
-    echo "       -Y string   - y-axis format, example 8.6f " 
-    echo "       -L          - use loopstats file instead of peerstats file "
-    echo "       -O          - show offset from loopstats file - column 3 "
-    echo "       -D          - show drift compensation from loopstats file - column 4 "
-    echo "       -E          - show estimated error from loopstats file - column 5 "
-    echo "       -S          - show stability from loopstats file - column 6 "
-    echo "       -P          - show polling interval from loopstats file - column 7 "
+    echo 
+    echo "       -C config-file  - overwrite searching the config file " 
+    echo "       -s              - success rate "
+    echo "       -p value        - poll interval used for calculation of success rate, default 64 "
+    echo "       -c              - y-axis is number and not percent , usefull for success rate "
+    echo "       -i              - interval between updates "
+    echo "       -a              - print average line "
+    echo "       -A              - save average result in file $AVGFILE / only with -a option usefull "
+    echo "       -l              - straight line instead of smooth csplines "
+    echo "       -f IMG          - output to file - IMG can be jpeg, png, ... "
+    echo "       -x range        - low:high, example 1:10.75 , default autorange -0.5:$DEFXMAX "
+    echo "       -y range        - low:high, example -0.1:0.1 , default autorange "
+    echo "       -t value        - timestemps per hour - default 1 "
+    echo "       -w value        - line width "
+    echo "       -M offset       - offset values for calculation, based on precalcualted offset instead of -m "
+    echo "       -m min max      - minimum and maximum values for calculation, only for next 4 options below "
+    echo "       -N value        - take each n'th record for calculation , default each record = 1 "
+    echo "       -q              - queued days - multiple days are not overlapped "
+    echo "       -o              - show offset from peerstats file - column 5 "
+    echo "       -r              - show roundtrip delay from peerstats file - column 6 "
+    echo "       -d              - show dispersion from peerstats file - column 7 "
+    echo "       -j              - show rms jitter from peerstats file - column 8 "
+    echo "       -F n            - fit function, n polynomial ( 1 or 2 )  "
+    echo "       -b              - label at bottom - only for fit function "
+    echo "       -Z 1|9          - debug  1 ... less, 9 ... more "
+    echo "       -Y string       - y-axis format, example 8.6f " 
+    echo "       -L              - use loopstats file instead of peerstats file , without IP as argument "
+    echo "       -O              - show offset from loopstats file - column 3 "
+    echo "       -D              - show drift compensation from loopstats file - column 4 "
+    echo "       -E              - show estimated error from loopstats file - column 5 "
+    echo "       -S              - show stability from loopstats file - column 6 "
+    echo "       -P              - show polling interval from loopstats file - column 7 "
     echo 
     exit 1
 }
 
+CONF=""
 # no limitation for the x-range , can be overwritten with -x
 XRANGE="-0.5:$DEFXMAX"
 # no limitation for the y-range , can be overwritten with -y
@@ -169,6 +172,7 @@ while test $# -gt $ARGC -o $do_once -eq 1
       -P ) DTYPE=P ; LINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -q ) QUDAYS=1 ; shift ;;
       -N ) NVALUE=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -N $NVALUE" ;;
+      -C ) shift ; CONF=$1 ; shift ;; 
       -* ) thisusage ; exit 1 ;; 
     esac
     if test $# -lt $ARGC
@@ -301,25 +305,37 @@ if test $XLOW -ge $XHIGH
     exit 1
 fi
 
-# check where the conf file is located
-CONF=N
-if test -f /etc/ntp.conf
-  then
-    CONF=/etc/ntp.conf
-fi
-if test -f /etc/inet/ntp.conf
-  then
-    CONF=/etc/inet/ntp.conf
-fi
-if test -f /etc/ntpsec/ntp.conf
-  then
-    CONF=/etc/ntpsec/ntp.conf
-fi
-if test $CONF = N
-  then
-    echo $PROGNAME: ntp.conf not found
-    exit 1
-fi
+case "$CONF" in 
+  "" ) 
+      # check where the conf file is located
+      CONF=N
+      if test -f /etc/ntp.conf
+        then
+          CONF=/etc/ntp.conf
+      fi
+      if test -f /etc/inet/ntp.conf
+        then
+          CONF=/etc/inet/ntp.conf
+      fi
+      if test -f /etc/ntpsec/ntp.conf
+        then
+          CONF=/etc/ntpsec/ntp.conf
+      fi
+      if test $CONF = N
+        then
+          echo $0: file ntp.conf not found
+          exit 1
+      fi
+      ;; 
+  * ) 
+      if test ! -f $CONF 
+        then 
+          echo $0: configuration file $CONF does not exist 
+          exit 1 
+      fi
+      ;; 
+esac 
+
 
 # is there a maxpoll interval 
 # if test -n "`grep $IP1 $CONF | grep maxpoll`" 

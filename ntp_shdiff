@@ -28,6 +28,7 @@
 # Sun Jun  4 13:46:50 CEST 2017 - mayer - check XRANGE
 # Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE
 # Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
+# Mon Sep 29 08:25:41 PM CEST 2025 - mayer - option -C for config file
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
@@ -57,25 +58,27 @@ LBLPOS=0.95
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP server as graph - v 2025 09 14 "
+    echo "show time difference for 2 NTP servers as graph - v 2025 09 29 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
-    echo "usage: $0 [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] [ -D 1|9 ] IP1 IP2 DATESPEC "
+    echo "usage: $0 [ -C path ] [ -a ] [ -f ] [ -l ] [ -m value ] [ -c low high ] [ -t value ] [ -w value ] [ -y range ] [ -F n ] [ -L ] [ -D 1|9 ] IP1 IP2 DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
     echo "       DATESPEC can also be path to peerstats file"
-    echo "       -x range      - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours "
-    echo "       -y range      - low:high, example -0.1:0.1 , default autorange " 
-    echo "       -a            - print average line " 
-    echo "       -l            - straight line instead of smooth csplines " 
-    echo "       -f IMG        - output to file in current working directory - IMG can be jpeg, png, ... "
-    echo "       -t number     - values per hour for average calculation, default is 1  "
-    echo "       -m value      - maximum time difference - default 1.1 second "
-    echo "       -c low high   - lower and upper limit to calculate - default 1.1 second "
-    echo "       -F n          - fit function, n polynomial ( 1 or 2 ) "
-    echo "       -L            - label at bottom - only for fit function "
-    echo "       -w value      - line width "
-    echo "       -D 1|9        - debug  1 ... less, 9 ... more "
+    echo 
+    echo "       -C config-file  - overwrite searching the config file " 
+    echo "       -x range        - low:high, example 1:10 , default autorange -0.5:24.8 , time in hours "
+    echo "       -y range        - low:high, example -0.1:0.1 , default autorange " 
+    echo "       -a              - print average line " 
+    echo "       -l              - straight line instead of smooth csplines " 
+    echo "       -f IMG          - output to file in current working directory - IMG can be jpeg, png, ... "
+    echo "       -t number       - values per hour for average calculation, default is 1  "
+    echo "       -m value        - maximum time difference - default 1.1 second "
+    echo "       -c low high     - lower and upper limit to calculate - default 1.1 second "
+    echo "       -F n            - fit function, n polynomial ( 1 or 2 ) "
+    echo "       -L              - label at bottom - only for fit function "
+    echo "       -w value        - line width "
+    echo "       -D 1|9          - debug  1 ... less, 9 ... more "
     echo 
     exit 1
 }
@@ -115,6 +118,7 @@ while test $# -gt 3 -o $do_once -eq 1
       -F ) POLYN=$2 ; shift ; shift ; FFIT=', line(x) ' ; SHOWOPT="$SHOWOPT -F $POLYN" ;; 
       -L ) LBLPOS=0.1 ; shift ;;
       -w ) LINEWIDTH=$2 ; shift ; shift ;;
+      -C ) shift ; CONF=$1 ; shift ;;
       -* ) thisusage ; exit 1 ;;
     esac 
     if test $# -lt 3 
@@ -219,25 +223,37 @@ XHIGH=`echo $XRANGE | tr '[:]' '   ' | $AWK '{ print $2 }'`
 
 : echo XLOW $XLOW XHIGH $XHIGH
 
-# check where the conf file is located 
-CONF=N
-if test -f /etc/ntp.conf 
-  then 
-    CONF=/etc/ntp.conf
-fi
-if test -f /etc/inet/ntp.conf 
-  then 
-    CONF=/etc/inet/ntp.conf
-fi
-if test -f /etc/ntpsec/ntp.conf
-  then
-    CONF=/etc/ntpsec/ntp.conf
-fi
-if test $CONF = N 
-  then 
-    echo $0: ntp.conf not found 
-    exit 1 
-fi
+case "$CONF" in 
+  "" ) 
+      # check where the conf file is located
+      CONF=N
+      if test -f /etc/ntp.conf
+        then
+          CONF=/etc/ntp.conf
+      fi
+      if test -f /etc/inet/ntp.conf
+        then
+          CONF=/etc/inet/ntp.conf
+      fi
+      if test -f /etc/ntpsec/ntp.conf
+        then
+          CONF=/etc/ntpsec/ntp.conf
+      fi
+      if test $CONF = N
+        then
+          echo $0: file ntp.conf not found
+          exit 1
+      fi
+      ;; 
+  * ) 
+      if test ! -f $CONF 
+        then 
+          echo $0: configuration file $CONF does not exist 
+          exit 1 
+      fi
+      ;; 
+esac 
+
 
 # what is statsdir directory and peerstats file ? 
 # awk is needed for solaris to strip off the leading blanks 
@@ -252,6 +268,10 @@ ls $STATSFILEPATH > /dev/null 2>&1
 if test $? -ne 0 
   then
     echo $0: $STATSFILEPATH not found 
+    if test -f $STATSFILEPATH.gz
+      then
+        echo "but $STATSFILEPATH.gz is available - unzip this file first "
+    fi
     exit 1
 fi
 DAYS=`ls  $STATSFILEPATH | wc -l | $AWK '{ print $1 }'`
