@@ -41,6 +41,7 @@
 # Sun 21 Aug 2022 08:47:26 PM CEST - mayer - bugfix XRANGE 
 # Sun Sep 28 09:29:31 PM CEST 2025 - mayer - inform about GZ file 
 # Mon Sep 29 08:25:41 PM CEST 2025 - mayer - option -C for config file
+# Tue 30 Sep 2025 09:39:48 PM CEST - mayer - convert PPS(x) to IP address 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
@@ -81,7 +82,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 29 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 30 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -236,9 +237,14 @@ if test $# -eq 2
     MDATE=$2
 
     # very rudimentary check of IP addresses - V4 and V6 
+    # and names like PPS(0) or SHM(0) 
     case "$IP1" in
       [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;;
       [1-9]*:* ) ;; 
+      PPS* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
+		IP1=127.127.22.$HOSTIP ;;
+      SHM* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
+		IP1=127.127.28.$HOSTIP ;;
       * )   echo $PROGNAME: bad IP address: "$IP1" 1>&2 
 	    thisusage
             exit 1 ;;

@@ -29,6 +29,7 @@
 # Fri Jul  7 21:45:31 CEST 2017 - mayer - calculation only for the given XRANGE
 # Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
 # Mon Sep 29 08:25:41 PM CEST 2025 - mayer - option -C for config file
+# Tue 30 Sep 2025 09:39:48 PM CEST - mayer - convert PPS(x) to IP address 
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
@@ -58,7 +59,7 @@ LBLPOS=0.95
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP servers as graph - v 2025 09 29 "
+    echo "show time difference for 2 NTP servers as graph - v 2025 09 30 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
@@ -196,6 +197,10 @@ esac
 case "$IP1" in
   [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;; 
   [1-9]*:* ) ;; 
+  PPS* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
+		IP1=127.127.22.$HOSTIP ;;
+  SHM* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
+		IP1=127.127.28.$HOSTIP ;;
   * ) 	thisusage
   	exit 1 ;;
 esac 
@@ -203,6 +208,10 @@ esac
 case "$IP2" in
   [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;; 
   [1-9]*:* ) ;; 
+  PPS* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
+		IP1=127.127.22.$HOSTIP ;;
+  SHM* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
+		IP1=127.127.28.$HOSTIP ;;
   * ) 	thisusage
   	exit 1 ;;
 esac 
