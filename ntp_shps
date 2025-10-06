@@ -42,9 +42,10 @@
 # Sun Sep 28 09:29:31 PM CEST 2025 - mayer - inform about GZ file 
 # Mon Sep 29 08:25:41 PM CEST 2025 - mayer - option -C for config file
 # Tue 30 Sep 2025 09:39:48 PM CEST - mayer - convert PPS(x) to IP address 
+# Mon 06 Oct 2025 06:06:01 PM CEST - mayer - avoid LINES as reserved word 
 
 
-export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR LINES SHOWOPT
+export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR GPLINES SHOWOPT
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
 export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH MOFFSET
@@ -58,7 +59,7 @@ LIST=/tmp/erg.dat.$$
 YLBL=percent 
 # default this year
 YEAR=`TZ=GMT date '+%Y'`
-LINES="smooth csplines"
+GPLINES="smooth csplines"
 POLL=-1
 DTYPE=x   	# display type -s -o -d -r or -i option 
 DEBUG=n
@@ -82,7 +83,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 09 30 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 10 6 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -141,18 +142,18 @@ while test $# -gt $ARGC -o $do_once -eq 1
     case $1 in
       -t ) TIMESPERH=$2 ; shift ; shift ;;
       -c ) CNTONLY=1 ; YLBL=count ; shift ;; 
-      -l ) LINES="with lines" ; shift ;;
+      -l ) GPLINES="with lines" ; shift ;;
       -x ) XRANGE="$2" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
       -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -y $2" ; shift ; shift ;;
       -p ) POLL=$2 ; shift ; shift ;;
       -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' with lines ls 2 " ; shift ;;
       -A ) AVGTOFILE=y ; shift ;;
       -s ) DTYPE=s ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
-      -i ) DTYPE=i ; LINES="" ; YLBL=interval ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -o ) DTYPE=o ; LINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -r ) DTYPE=r ; LINES="" ; YLBL='roundtrip delay' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -d ) DTYPE=d ; LINES="" ; YLBL=dispersion ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
-      -j ) DTYPE=j ; LINES="" ; YLBL=jitter ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -i ) DTYPE=i ; GPLINES="" ; YLBL=interval ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -o ) DTYPE=o ; GPLINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -r ) DTYPE=r ; GPLINES="" ; YLBL='roundtrip delay' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -d ) DTYPE=d ; GPLINES="" ; YLBL=dispersion ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
+      -j ) DTYPE=j ; GPLINES="" ; YLBL=jitter ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;;
       -Z ) DEBUG=y ; shift ; DEBUGOPT=$1 ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" "
            STERM="set terminal $2"
@@ -166,11 +167,11 @@ while test $# -gt $ARGC -o $do_once -eq 1
       -b ) LBLPOS=0.1 ; shift ;; 
       -Y ) FORMATY="set format y \"%$2\"" ; shift ; shift ;; 
       -L ) STATSTYPE=loopstats ; shift ; ARGC=1 ;; 
-      -O ) DTYPE=O ; LINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
-      -D ) DTYPE=D ; LINES="" ; YLBL='drift compensation' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
-      -E ) DTYPE=E ; LINES="" ; YLBL='estimated error' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
-      -S ) DTYPE=S ; LINES="" ; YLBL='stability' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
-      -P ) DTYPE=P ; LINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -O ) DTYPE=O ; GPLINES="" ; YLBL='offset (sec)' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -D ) DTYPE=D ; GPLINES="" ; YLBL='drift compensation' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -E ) DTYPE=E ; GPLINES="" ; YLBL='estimated error' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -S ) DTYPE=S ; GPLINES="" ; YLBL='stability' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
+      -P ) DTYPE=P ; GPLINES="" ; YLBL='polling interval' ; shift ; UNIQARGCNT=$((UNIQARGCNT+1)) ;; 
       -q ) QUDAYS=1 ; shift ;;
       -N ) NVALUE=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -N $NVALUE" ;;
       -C ) shift ; CONF=$1 ; shift ;; 
@@ -701,7 +702,7 @@ gnuplot << EOF
   $YFIT
   $UNWFIT
   $SETLBL
-  plot "$LIST" using 1:2 title "$YLBL" $LINES ls 1 $AVGLINE $FFIT  
+  plot "$LIST" using 1:2 title "$YLBL" $GPLINES ls 1 $AVGLINE $FFIT  
   $PRRESULT
 EOF
 
