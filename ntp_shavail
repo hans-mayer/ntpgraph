@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/usr/bin/env bash
 
 # Sat Aug 15 13:33:59 CEST 2015
 # Wednesday, August 19, 2015 03:42:24 PM CEST - mayer 
@@ -31,6 +31,7 @@ NOTSELECTED=/tmp/...ntp_shav_notselected
 NOSELECT=n
 # wildcard for egrep if -s is not used 
 SELECTEDH='.'
+DEBUGOPT=0
 
 thisusage(){
     echo
