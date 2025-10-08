@@ -35,7 +35,7 @@ DEBUGOPT=0
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2025 10 8 "
+    echo "show NTP available peers as graph  - v 2025 10 08 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo

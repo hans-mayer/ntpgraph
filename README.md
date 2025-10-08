@@ -12,7 +12,8 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 * ntp_shavail
 
 Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11  
-It's important to use ksh93 and not something different like "mksh" 
+Before version 2025/10/08 it was important to use ksh93 and not something different like "mksh"  
+In the current version all scripts are using "bash" 
 
 ## ntp_shps
 
@@ -20,7 +21,7 @@ It's important to use ksh93 and not something different like "mksh"
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2025 09 29 
+    show NTP peerstats or loopstats values as graph  - v 2025 10 08
       author: ntpgraph@ma.yer.at 
       source: https://github.com/hans-mayer/ntpgraph 
     
@@ -39,7 +40,7 @@ It's important to use ksh93 and not something different like "mksh"
        -l              - straight line instead of smooth csplines 
        -f IMG          - output to file - IMG can be jpeg, png, ... 
        -x range        - low:high, example 1:10.75 , default autorange -0.5:24.8 
-       -y range        - low:high, example -0.1:0.1 , default autorange 
+       -y range        - low:high, example -0.1:0.1 , default autorange , to mirror replace high and low 
        -t value        - timestemps per hour - default 1 
        -w value        - line width 
        -M offset       - offset values for calculation, based on precalcualted offset instead of -m 
@@ -129,7 +130,7 @@ With debug option -D the fit log file "/tmp/fit.log.$$" will not be deleted for 
 
     # ntp_shdiff
 
-    show time difference for 2 NTP servers as graph - v 2025 09 29 
+    show time difference for 2 NTP servers as graph - v 2025 10 08
       author: ntpgraph@ma.yer.at 
       source: https://github.com/hans-mayer/ntpgraph 
     
@@ -186,7 +187,7 @@ with ntptconv
 
     # ntp_shavail
 
-    show NTP available peers as graph  - v 2025 10 8 
+    show NTP available peers as graph  - v 2025 10 08 
       author: ntpgraph@ma.yer.at 
       source: https://github.com/hans-mayer/ntpgraph 
 
