@@ -11,9 +11,11 @@
 # Friday, June 30, 2017 10:22:31 AM CEST - mayer - rm NOTSELECTED
 # Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
 # Sun 28 Sep 2025 10:55:55 PM CEST - mayer - option -C for config file 
+# Wed Oct  8 09:46:57 PM CEST 2025 - mayer - option -s for selected hosts 
 
 
-export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM 
+
+export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM SELECTEDH
 export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT NOSELECT NOTSELECTED H SRV NOSELHOST PATH 
 
 
@@ -30,15 +32,16 @@ NOSELECT=n
 
 thisusage(){
     echo
-    echo "show NTP available peers as graph  - v 2025 09 29 "
+    echo "show NTP available peers as graph  - v 2025 10 8 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
-    echo "usage: $0 [ -n ] [ -C path ] [ -D 1|9 ] [ -f IMG ] DATE "
+    echo "usage: $0 [ -n ] [ -s \"string\" ] [ -C path ] [ -D 1|9 ] [ -f IMG ] DATE "
     echo "       date is MMDD in year $YEAR or YYYYMMDD or . or - ( . is today, - is yesterday  ) " 
     echo "       -f IMG          - output to file - IMG can be jpeg, png, ... "
     echo "       -C config-file  - overwrite searching the config file " 
-    echo "       -n              - don't take server marked as noselect "  
+    echo "       -n              - don't take servers marked as noselect for calculation "  
+    echo "       -s hosts        - only selected hosts ( egrep syntax, e.g. '127.127|192.168' ) " 
     echo "       -D 1|9          - debug  1 ... less, 9 ... more "
     echo
     exit 1
@@ -59,6 +62,7 @@ while test $# -gt $MINARGS -o $do_once -eq 1
            LINEWIDTH=1
            echo $FILE ; shift ; shift ;;
       -n ) NOSELECT=y ; shift ;;
+      -s ) shift ; SELECTEDH="$1" ; shift ;; 
       -C ) shift ; CONF=$1 ; shift ;;
       - )  break ;;  # yesterday
       -* ) thisusage ; exit 1 ;;
@@ -216,7 +220,7 @@ if test $NOSELECT = y
 fi 
 
 
-cat $STATSDIR/${PEERSTATS}.$SELDATE | fgrep -v -f $NOTSELECTED | \
+cat $STATSDIR/${PEERSTATS}.$SELDATE | fgrep -v -f $NOTSELECTED | egrep $SELECTEDH | \
   $AWK '{ print ( $3 ) }' | sort -u | $AWK '{ print ( $1 , NR ) }' | \
     while read IP IND 
       do 

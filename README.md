@@ -11,7 +11,8 @@ ksh scripts using gawk, gnuplot and gnuplot-x11
 * ntptconv
 * ntp_shavail
 
-Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11
+Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11  
+It's important to use ksh93 and not something different like "mksh" 
 
 ## ntp_shps
 
@@ -185,15 +186,16 @@ with ntptconv
 
     # ntp_shavail
 
-    show NTP available peers as graph  - v 2025 09 29 
+    show NTP available peers as graph  - v 2025 10 8 
       author: ntpgraph@ma.yer.at 
       source: https://github.com/hans-mayer/ntpgraph 
-    
-    usage: ./ntp_shavail [ -n ] [ -C path ] [ -D 1|9 ] [ -f IMG ] DATE 
+
+    usage: /uni/bin/ntp_shavail [ -n ] [ -s "string" ] [ -C path ] [ -D 1|9 ] [ -f IMG ] DATE 
        date is MMDD in year 2025 or YYYYMMDD or . or - ( . is today, - is yesterday  ) 
        -f IMG          - output to file - IMG can be jpeg, png, ... 
        -C config-file  - overwrite searching the config file 
-       -n              - don't take server marked as noselect 
+       -n              - don't take servers marked as noselect for calculation 
+       -s hosts        - only selected hosts ( egrep syntax, e.g. '127.127|192.168' ) 
        -D 1|9          - debug  1 ... less, 9 ... more 
 
 
