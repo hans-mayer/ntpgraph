@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/usr/bin/env bash
 
 
 # Sat Feb 28 21:21:50 CET 2015 - mayer 
@@ -43,6 +43,8 @@
 # Mon Sep 29 08:25:41 PM CEST 2025 - mayer - option -C for config file
 # Tue 30 Sep 2025 09:39:48 PM CEST - mayer - convert PPS(x) to IP address 
 # Mon 06 Oct 2025 06:06:01 PM CEST - mayer - avoid LINES as reserved word 
+# Wed Oct  8 11:37:02 PM CEST 2025 - mayer - using bash instead of ksh93
+
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR GPLINES SHOWOPT
@@ -83,7 +85,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 10 6 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 10 08 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -102,7 +104,7 @@ thisusage(){
     echo "       -l              - straight line instead of smooth csplines "
     echo "       -f IMG          - output to file - IMG can be jpeg, png, ... "
     echo "       -x range        - low:high, example 1:10.75 , default autorange -0.5:$DEFXMAX "
-    echo "       -y range        - low:high, example -0.1:0.1 , default autorange "
+    echo "       -y range        - low:high, example -0.1:0.1 , default autorange , to mirror replace high and low "
     echo "       -t value        - timestemps per hour - default 1 "
     echo "       -w value        - line width "
     echo "       -M offset       - offset values for calculation, based on precalcualted offset instead of -m "
@@ -303,7 +305,7 @@ XHIGH=`echo $XRANGE | tr ':' ' ' | $AWK '{ print $2 }'`
 
 # echo XLOW: $XLOW / XHIGH: $XHIGH 
 # check XRANGE low value smaller than high value 
-if test $XLOW -ge $XHIGH 
+if awk -v LOW=$XLOW -v HI=$XHIGH 'BEGIN { exit !(LOW > HI) }'
   then 
     echo 
     echo "xrange low < high, example 1:10.75 , current value $XRANGE "  
