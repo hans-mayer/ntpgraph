@@ -12,7 +12,7 @@
 # Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
 # Sun 28 Sep 2025 10:55:55 PM CEST - mayer - option -C for config file 
 # Wed Oct  8 09:46:57 PM CEST 2025 - mayer - option -s for selected hosts 
-
+# Wed Oct  8 11:37:02 PM CEST 2025 - mayer - using bash instead of ksh93 
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM SELECTEDH

@@ -30,10 +30,11 @@
 # Tue Aug 15 20:25:07 CEST 2017 - mayer - bugfix $do_once
 # Mon Sep 29 08:25:41 PM CEST 2025 - mayer - option -C for config file
 # Tue 30 Sep 2025 09:39:48 PM CEST - mayer - convert PPS(x) to IP address 
+# Wed Oct  8 11:37:02 PM CEST 2025 - mayer - using bash instead of ksh93
 
 
 export DISPLAY DAYS TIMESPERH IP1 IP2 AWK STATSDIR PEERSTATS LIST YRANGE FILE XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG
-export TERM YEAR LINES AVG AVGLINE SELDATE LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
+export TERM YEAR GPLINES AVG AVGLINE SELDATE LOOPCNT XRANGE LBLPOS LINEX SETLBL POLYN PRRESULT SHOWOPT
 export LINEWIDTH TIMEDIFFLOW TIMEDIFFHIGH FITQUIET DEBUGOPT XLOW XHIGH 
 
 AWK=gawk
@@ -46,7 +47,7 @@ TERM="set term x11 persist"
 # default this year 
 YEAR=`TZ=GMT date '+%Y'`
 # connect the point with curves - changed with option -l 
-LINES="smooth csplines"
+GPLINES="smooth csplines"
 # miximum time difference, values below will be taken for calculation
 TIMEDIFFLOW=-1.1
 TIMEDIFFHIGH=1.1
@@ -59,7 +60,7 @@ DEBUGOPT=0
 thisusage(){
     set +x
     echo 
-    echo "show time difference for 2 NTP servers as graph - v 2025 09 30 "
+    echo "show time difference for 2 NTP servers as graph - v 2025 10 08 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo
@@ -106,13 +107,13 @@ while test $# -gt 3 -o $do_once -eq 1
       -t ) TIMESPERH=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -t $TIMESPERH" ;; 
       -x ) XRANGE="[$2]" ; SHOWOPT="$SHOWOPT -x $2 h" ; shift ; shift ;;
       -y ) YRANGE="[$2]" ; SHOWOPT="$SHOWOPT -y $2" ; shift ; shift ;; 
-      -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' $LINES ls 2 " ; shift ;; 
+      -a ) AVGLINE=", \"$LIST\" using 1:3 title 'average' $GPLINES ls 2 " ; shift ;; 
       -f ) FILE="set output \"plot_$$.$2\" " 
            TERM="set terminal $2"
            LINEWIDTH=1
            XTICS=2
            echo $FILE ; shift ; shift ;; 
-      -l ) LINES="with lines" ; shift ;;
+      -l ) GPLINES="with lines" ; shift ;;
       -D ) DEBUG=y ; shift ; DEBUGOPT=$1 ; shift ;;
       -m ) TIMEDIFFLOW=-$2 ; TIMEDIFFHIGH=$2 ; shift ; shift ; SHOWOPT="$SHOWOPT -m $TIMEDIFFHIGH" ;; 
       -c ) TIMEDIFFLOW=$2 ; TIMEDIFFHIGH=$3 ; shift ; shift ; shift ; SHOWOPT="$SHOWOPT -c $TIMEDIFFLOW $TIMEDIFFHIGH" ;; 
@@ -444,7 +445,7 @@ gnuplot << EOF
   $YFIT 
   $UNWFIT
   $SETLBL
-  plot "$LIST" using 1:2 title 'offset' $LINES ls 1 $AVGLINE $FFIT 
+  plot "$LIST" using 1:2 title 'offset' $GPLINES ls 1 $AVGLINE $FFIT 
   $PRRESULT
 EOF
 
