@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/usr/bin/env bash
 
 # #!/usr/bin/ksh
 # #!/usr/bin/bash
@@ -54,7 +54,7 @@ LINEWIDTH=2
 XTICS=1
 XRANGE='[-0.5:24.8]'
 LBLPOS=0.95
-
+DEBUGOPT=0 
 
 thisusage(){
     set +x
