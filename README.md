@@ -4,14 +4,14 @@
 
 for UNIX like systems
 
-ksh scripts using gawk, gnuplot and gnuplot-x11
+bash scripts using gawk, gnuplot and gnuplot-x11
 
 * ntp_shps
 * ntp_shdiff
 * ntptconv
 * ntp_shavail
 
-Ubuntu and Debian prerequisites:  apt-get install ksh gawk gnuplot gnuplot-x11  
+Ubuntu and Debian prerequisites:  apt-get install gawk gnuplot gnuplot-x11  
 Before version 2025/10/08 it was important to use ksh93 and not something different like "mksh"  
 In the current version all scripts are using "bash" 
 
