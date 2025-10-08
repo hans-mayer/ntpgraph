@@ -29,6 +29,8 @@ LIST=/tmp/erg.dat.$$
 STERM="set term x11 persist"
 NOTSELECTED=/tmp/...ntp_shav_notselected 
 NOSELECT=n
+# wildcard for egrep if -s is not used 
+SELECTEDH='.'
 
 thisusage(){
     echo
