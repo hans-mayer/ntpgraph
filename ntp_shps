@@ -44,7 +44,7 @@
 # Tue 30 Sep 2025 09:39:48 PM CEST - mayer - convert PPS(x) to IP address 
 # Mon 06 Oct 2025 06:06:01 PM CEST - mayer - avoid LINES as reserved word 
 # Wed Oct  8 11:37:02 PM CEST 2025 - mayer - using bash instead of ksh93
-
+# Sun Oct 12 21:13:44 CEST 2025 - mayer - bugfix STATSFILE can have multiple files 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR GPLINES SHOWOPT
@@ -85,7 +85,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 10 08 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 10 12 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -370,19 +370,22 @@ STATSFILEPATH=${STATSFILEPATH:-$STATSDIR/$STATSFILE.$SELDATE}
 if test "$DEBUG" == y
   then
     echo CONF $CONF
-    echo STATSDIR $STATSDIR STATSFILE $STATSFILEPATH
+    echo STATSDIR $STATSDIR STATSFILEPATH $STATSFILEPATH
     echo DAYS=$DAYS TIMESPERH=$TIMESPERH CNTONLY=$CNTONLY POLL=$POLL 
 fi
 
-if test ! -f $STATSFILEPATH 
-  then 
-    echo $PROGNAME: file $STATSFILEPATH not found 
-    if test -f $STATSFILEPATH.gz 
+for STATSFP in $STATSFILEPATH 
+  do
+    if test ! -f $STATSFP 
       then 
-        echo "but $STATSFILEPATH.gz is available - unzip this file first "
-    fi
-    exit 1 
-fi 
+        echo $PROGNAME: file $STATSFP not found 
+        if test -f $STATSFP.gz 
+          then 
+            echo "but $STATSFP.gz is available - unzip this file first "
+        fi
+        exit 1 
+    fi 
+done 
 
 DAYS=`ls  $STATSFILEPATH | wc -l | $AWK '{ print $1 }'` 
 : echo DAYS $DAYS 
