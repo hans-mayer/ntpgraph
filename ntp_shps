@@ -51,7 +51,7 @@ export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR GPLI
 export POLL TITLE AVG AVGLINE DTYPE DEBUG MIN MAX LINEWIDTH XTICS LOOPCNT MYIPIS XRANGE
 export XFIT YFIT FFIT UNWFIT LOGFIT FIT_LOG LBLPOS LINEX SETLBL POLYN FORMATY PRRESULT 
 export UNIQARGCNT STATSTYPE ARGC AVGFILE AVGTOFILE FITQUIET DEBUGOPT XLOW XHIGH MOFFSET
-export CALCOFFSET QUDAYS QUDYCNT DEFXMAX PROGNAME SELDATE SELDATINFO NVALUE
+export CALCOFFSET QUDAYS QUDYCNT DEFXMAX PROGNAME SELDATE SELDATINFO NVALUE STATSFP NRCONF
 
 PROGNAME=$0
 AWK=gawk
@@ -90,7 +90,7 @@ thisusage(){
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
     echo "usage: $PROGNAME [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
-    echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) "
+    echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) or MMD[x-z] "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only for peerstats graph, not for loopstats "
     echo 
@@ -314,6 +314,7 @@ if awk -v LOW=$XLOW -v HI=$XHIGH 'BEGIN { exit !(LOW > HI) }'
     exit 1
 fi
 
+NRCONF=0
 case "$CONF" in 
   "" ) 
       # check where the conf file is located
@@ -321,14 +322,17 @@ case "$CONF" in
       if test -f /etc/ntp.conf
         then
           CONF=/etc/ntp.conf
+          NRCONF=$((++NRCONF))
       fi
       if test -f /etc/inet/ntp.conf
         then
           CONF=/etc/inet/ntp.conf
+          NRCONF=$((++NRCONF))
       fi
       if test -f /etc/ntpsec/ntp.conf
         then
           CONF=/etc/ntpsec/ntp.conf
+          NRCONF=$((++NRCONF))
       fi
       if test $CONF = N
         then
@@ -344,6 +348,11 @@ case "$CONF" in
       fi
       ;; 
 esac 
+
+if test "$NRCONF" -gt 1 
+  then
+    echo $0: WARNING: more than 1 config file found - $CONF will be used 1>&2 
+fi
 
 
 # is there a maxpoll interval 
@@ -373,6 +382,15 @@ if test "$DEBUG" == y
     echo STATSDIR $STATSDIR STATSFILEPATH $STATSFILEPATH
     echo DAYS=$DAYS TIMESPERH=$TIMESPERH CNTONLY=$CNTONLY POLL=$POLL 
 fi
+
+for STATSFP in $STATSFILEPATH.gz
+  do
+    if test -f $STATSFP 
+      then 
+        echo $PROGNAME: file $STATSFP is zipped - gunzip this file first 
+        exit 1 
+    fi 
+done 
 
 for STATSFP in $STATSFILEPATH 
   do

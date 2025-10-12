@@ -21,12 +21,12 @@ In the current version all scripts are using "bash"
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2025 10 08
+    show NTP peerstats or loopstats values as graph  - v 2025 10 12
       author: ntpgraph@ma.yer.at 
       source: https://github.com/hans-mayer/ntpgraph 
     
     usage: /uni/bin/ntp_shps [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC 
-       DATESPEC is MMDD in year 2025 or YYYYMMDD or . (today) or - (yesterday) 
+       DATESPEC is MMDD in year 2025 or YYYYMMDD or . (today) or - (yesterday) or MMD[x-z]
        DATESPEC may also be path to peerstats/loopstats file 
        IP address  - only for peerstats graph, not for loopstats 
     
