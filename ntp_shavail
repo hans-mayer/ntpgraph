@@ -13,10 +13,11 @@
 # Sun 28 Sep 2025 10:55:55 PM CEST - mayer - option -C for config file 
 # Wed Oct  8 09:46:57 PM CEST 2025 - mayer - option -s for selected hosts 
 # Wed Oct  8 11:37:02 PM CEST 2025 - mayer - using bash instead of ksh93 
+# Fri 17 Oct 2025 11:09:36 PM CEST - mayer - warning for multible config files found 
 
 
 export DISPLAY AWK STATSDIR PEERSTATS SELDATE CONF YEAR MINARGS TMPIPADDR SEDARG LIST STERM SELECTEDH
-export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT NOSELECT NOTSELECTED H SRV NOSELHOST PATH 
+export TMP1 TITLE1 TITLE2 YLABEL HOSTN MYADDR LOOPCNT DEBUGOPT NOSELECT NOTSELECTED H SRV NOSELHOST PATH NRCONF
 
 
 PATH=$PATH:/usr/sbin
@@ -132,24 +133,28 @@ if test $? -ne 0
     exit 1
 fi
 
+NRCONF=0
 case "$CONF" in 
   "" ) 
-      # check where the conf file is located
-      CONF=N
-      if test -f /etc/ntp.conf
-        then
+      # check where the conf file is located 
+      CONF=N 
+      if test -f /etc/ntp.conf 
+        then 
           CONF=/etc/ntp.conf
+          NRCONF=$((++NRCONF)) 
       fi
       if test -f /etc/inet/ntp.conf
-        then
-          CONF=/etc/inet/ntp.conf
+        then 
+          CONF=/etc/inet/ntp.conf 
+          NRCONF=$((++NRCONF)) 
       fi
       if test -f /etc/ntpsec/ntp.conf
-        then
+        then 
           CONF=/etc/ntpsec/ntp.conf
+          NRCONF=$((++NRCONF))
       fi
       if test $CONF = N
-        then
+        then 
           echo $0: file ntp.conf not found
           exit 1
       fi
@@ -162,6 +167,12 @@ case "$CONF" in
       fi
       ;; 
 esac 
+
+if test "$NRCONF" -gt 1
+  then
+    echo $0: WARNING: more than 1 config file found - $CONF will be used 1>&2
+fi
+
 
 # look what is statsdir directory and peerstats file defined
 # awk is needed for solaris to strip off the leading blanks
