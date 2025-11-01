@@ -45,6 +45,7 @@
 # Mon 06 Oct 2025 06:06:01 PM CEST - mayer - avoid LINES as reserved word 
 # Wed Oct  8 11:37:02 PM CEST 2025 - mayer - using bash instead of ksh93
 # Sun Oct 12 21:13:44 CEST 2025 - mayer - bugfix STATSFILE can have multiple files 
+# Sat 01 Nov 2025 08:24:34 PM CET - mayer - fix for log entries like PPS(0) 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR GPLINES SHOWOPT
@@ -85,14 +86,15 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 10 12 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 11 01 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
     echo "usage: $PROGNAME [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) or MMD[x-z] "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
-    echo "       IP address  - only for peerstats graph, not for loopstats "
+    echo "       IP address  - only necessary for peerstats graph but not for loopstats "
+    echo "                   - can be real IP or i.e. 127.127.22.0 or PPS(0) " 
     echo 
     echo "       -C config-file  - overwrite searching the config file " 
     echo "       -s              - success rate "
@@ -241,13 +243,18 @@ if test $# -eq 2
 
     # very rudimentary check of IP addresses - V4 and V6 
     # and names like PPS(0) or SHM(0) 
+    HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
     case "$IP1" in
-      [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) ;;
-      [1-9]*:* ) ;; 
-      PPS* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
-		IP1=127.127.22.$HOSTIP ;;
-      SHM* ) HOSTIP=`echo "$IP1" | tr '()' '  ' | awk  '{ print ( $2 ) }'`
-		IP1=127.127.28.$HOSTIP ;;
+      [1-9]*\.[0-9]*\.[0-9]*\.[0-9]* ) 
+		IP1GREP=$IP1 ;;
+      [1-9]*:* ) 
+		IP1GREP=$IP1 ;; 
+      PPS??? ) 
+		IP1=127.127.22.$HOSTIP 
+		IP1GREP="127.127.22.$HOSTIP|PPS.$HOSTIP" ;;
+      SHM??? ) 
+		IP1=127.127.28.$HOSTIP 
+		IP1GREP="127.127.22.$HOSTIP|SHM.$HOSTIP" ;;
       * )   echo $PROGNAME: bad IP address: "$IP1" 1>&2 
 	    thisusage
             exit 1 ;;
@@ -362,6 +369,7 @@ fi
 #     echo MAXPOLL $MAXPOLL
 # fi
 
+# warum ? 
 if test $POLL -eq -1 
   then
     case $IP1 in 
@@ -418,7 +426,7 @@ if test $DTYPE == s
     # show success graph 
     cat $STATSFILEPATH | \
     $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
-    grep $IP1 | \
+    egrep $IP1GREP | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
         AVERAGE = 0 ;
@@ -442,7 +450,7 @@ if test $DTYPE == i
     # show graph with intervals 
     cat $STATSFILEPATH | \
     $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
-    grep $IP1 | \
+    egrep $IP1GREP | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL '
       BEGIN {
         AVERAGE = 0 ;
@@ -508,7 +516,7 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
     esac 
     RESULT2ARG=`cat $STATSFILEPATH | \
     $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
-    grep $IP1 | \
+    egrep $IP1GREP | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX '
       BEGIN {
         AVERAGE = 0 ;
@@ -576,7 +584,7 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
     esac 
     cat $STATSFILEPATH | \
     $AWK -v XLOW=$XLOW -v XHIGH=$XHIGH '{ if ( ( XLOW * 3600 <= $2 ) && ( $2 <= XHIGH * 3600 ) ) { print $0 } }' | \
-    grep $IP1 | \
+    egrep $IP1GREP | \
     $AWK -v DAYS=$DAYS -v TIMESPERH=$TIMESPERH -v CNTONLY=$CNTONLY -v POLL=$POLL -v COLUMN=$COLUMN -v MIN=$MIN -v MAX=$MAX -v QUDAYS=$QUDAYS -v NVALUE=$NVALUE '
       BEGIN {
         AVERAGE = 0 ;
@@ -656,9 +664,9 @@ if test "$IP1" == '.'
     # if reverse lookup does not work take the IP
     if test -z "$HOST1"
       then
-        TITLE="$MYIPIS $STATSTYPE - $IP1 - ${SELDATINFO:-} "
+        TITLE="$MYIPIS $STATSTYPE - $IP1$HOSTIP - ${SELDATINFO:-} "
       else 
-        TITLE="$MYIPIS $STATSTYPE - $IP1 - $HOST1 - ${SELDATINFO:-} "
+        TITLE="$MYIPIS $STATSTYPE - $IP1$HOSTIP - $HOST1 - ${SELDATINFO:-} "
     fi
 fi
 

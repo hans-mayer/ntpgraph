@@ -21,7 +21,7 @@ In the current version all scripts are using "bash"
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2025 10 12
+    show NTP peerstats or loopstats values as graph  - v 2025 11 01
       author: ntpgraph@ma.yer.at 
       source: https://github.com/hans-mayer/ntpgraph 
     
