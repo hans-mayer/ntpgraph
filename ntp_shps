@@ -46,6 +46,7 @@
 # Wed Oct  8 11:37:02 PM CEST 2025 - mayer - using bash instead of ksh93
 # Sun Oct 12 21:13:44 CEST 2025 - mayer - bugfix STATSFILE can have multiple files 
 # Sat 01 Nov 2025 08:24:34 PM CET - mayer - fix for log entries like PPS(0) 
+# Sat 08 Nov 2025 09:36:50 PM CET - mayer - bugfix for loopstats statistics 
 
 
 export DISPLAY DAYS TIMESPERH AWK STATSDIR STATSFILE LIST CNTONLY YLBL YEAR GPLINES SHOWOPT
@@ -86,11 +87,11 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 11 01 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 11 08 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
-    echo "usage: $PROGNAME [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
+    echo "usage: $PROGNAME [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC "
     echo "       DATESPEC is MMDD in year $YEAR or YYYYMMDD or . (today) or - (yesterday) or MMD[x-z] "
     echo "       DATESPEC may also be path to peerstats/loopstats file "
     echo "       IP address  - only necessary for peerstats graph but not for loopstats "
@@ -110,9 +111,9 @@ thisusage(){
     echo "       -t value        - timestemps per hour - default 1 "
     echo "       -w value        - line width "
     echo "       -M offset       - offset values for calculation, based on precalcualted offset instead of -m "
-    echo "       -m min max      - minimum and maximum values for calculation, only for next 4 options below "
     echo "       -N value        - take each n'th record for calculation , default each record = 1 "
     echo "       -q              - queued days - multiple days are not overlapped "
+    echo "       -m min max      - minimum and maximum values for calculation, only in combination with next 4 options below "
     echo "       -o              - show offset from peerstats file - column 5 "
     echo "       -r              - show roundtrip delay from peerstats file - column 6 "
     echo "       -d              - show dispersion from peerstats file - column 7 "
@@ -122,6 +123,7 @@ thisusage(){
     echo "       -Z 1|9          - debug  1 ... less, 9 ... more "
     echo "       -Y string       - y-axis format, example 8.6f " 
     echo "       -L              - use loopstats file instead of peerstats file , without IP as argument "
+    echo "                         this option is mandatory for the next 5 options "
     echo "       -O              - show offset from loopstats file - column 3 "
     echo "       -D              - show drift compensation from loopstats file - column 4 "
     echo "       -E              - show estimated error from loopstats file - column 5 "
@@ -255,6 +257,9 @@ if test $# -eq 2
       SHM??? ) 
 		IP1=127.127.28.$HOSTIP 
 		IP1GREP="127.127.22.$HOSTIP|SHM.$HOSTIP" ;;
+      LOCAL??? ) 
+		IP1=127.127.1.$HOSTIP 
+		IP1GREP="127.127.1.$HOSTIP|LOCAL.$HOSTIP" ;;
       * )   echo $PROGNAME: bad IP address: "$IP1" 1>&2 
 	    thisusage
             exit 1 ;;
@@ -506,11 +511,11 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
       r ) COLUMN=6 ;; 
       d ) COLUMN=7 ;; 
       j ) COLUMN=8 ;; 
-      O ) COLUMN=3 ; IP1=. ;; 
-      D ) COLUMN=4 ; IP1=. ;; 
-      E ) COLUMN=5 ; IP1=. ;; 
-      S ) COLUMN=6 ; IP1=. ;; 
-      P ) COLUMN=7 ; IP1=. ;; 
+      O ) COLUMN=3 ; IP1GREP=. ;; 
+      D ) COLUMN=4 ; IP1GREP=. ;; 
+      E ) COLUMN=5 ; IP1GREP=. ;; 
+      S ) COLUMN=6 ; IP1GREP=. ;; 
+      P ) COLUMN=7 ; IP1GREP=. ;; 
       * ) echo "$PROGNAME: fatal program error " 1>&2 
 	  exit 1 ;; 
     esac 
@@ -574,11 +579,11 @@ if test $DTYPE == o -o $DTYPE == d -o $DTYPE == j -o $DTYPE == r -o $DTYPE == O 
       r ) COLUMN=6 ;; 
       d ) COLUMN=7 ;; 
       j ) COLUMN=8 ;; 
-      O ) COLUMN=3 ; IP1=. ;; 
-      D ) COLUMN=4 ; IP1=. ;; 
-      E ) COLUMN=5 ; IP1=. ;; 
-      S ) COLUMN=6 ; IP1=. ;; 
-      P ) COLUMN=7 ; IP1=. ;; 
+      O ) COLUMN=3 ; IP1GREP=. ;; 
+      D ) COLUMN=4 ; IP1GREP=. ;; 
+      E ) COLUMN=5 ; IP1GREP=. ;; 
+      S ) COLUMN=6 ; IP1GREP=. ;; 
+      P ) COLUMN=7 ; IP1GREP=. ;; 
       * ) echo "$PROGNAME: fatal program error " 1>&2 
 	  exit 1 ;; 
     esac 
@@ -654,8 +659,8 @@ if test $? -eq 0
     MYIPIS="$TITLEHOST"
 fi
 
-# IP1 is . for loopstats file 
-if test "$IP1" == '.' 
+# IP1GREP is . for loopstats file 
+if test "$IP1GREP" == '.' 
   then 
     TITLE="$MYIPIS $STATSTYPE - ${SELDATINFO:-} "
   else 
@@ -711,6 +716,31 @@ if test $QUDAYS -eq 1
   then 
     # if there are multiple days a bigger interval of xtics 
     XTICS=$((XTICS*QUDYCNT)) 
+fi
+
+if test "$DEBUG" == y
+  then
+    echo $STERM
+    echo $FILE
+    echo set title "$TITLE $AVG\n$SHOWOPT"
+    echo set xlabel "hour"
+    echo set ylabel "$YLBL"
+    echo set xtics $XTICS
+    echo set xrange [$XRANGE]
+    echo set yrange $YRANGE
+    echo set style line 1 linewidth $LINEWIDTH
+    echo set style line 2 linewidth $LINEWIDTH
+    echo $FORMATY
+    echo set dummy x, y
+    echo $LINEX
+    echo $LOGFIT
+    echo $FITQUIET
+    echo $XFIT
+    echo $YFIT
+    echo $UNWFIT
+    echo $SETLBL
+    echo plot "$LIST" using 1:2 title "$YLBL" $GPLINES ls 1 $AVGLINE $FFIT  
+    echo $PRRESULT
 fi
 
 gnuplot << EOF

@@ -21,15 +21,16 @@ In the current version all scripts are using "bash"
 
     # ntp_shps
 
-    show NTP peerstats or loopstats values as graph  - v 2025 11 01
+    show NTP peerstats or loopstats values as graph  - v 2025 11 08 
       author: ntpgraph@ma.yer.at 
       source: https://github.com/hans-mayer/ntpgraph 
-    
-    usage: /uni/bin/ntp_shps [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -L ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC 
-       DATESPEC is MMDD in year 2025 or YYYYMMDD or . (today) or - (yesterday) or MMD[x-z]
+
+    usage: /opt/iiasa/bin/ntp_shps [ -C path ] [ -L ] -s|-i|-o|-d|-r|-j | -O|-D|-E|-S|-P [ -p value ] [ -a ] [ -A ] [ -t value ] [ -m min max | -M offset ] [ -N value ] [ -c ] [ -q ] [ -l ] [ -w value ] [ -x range ][ -y range ] [ -F n ] [ -f IMG ] [ -Y string ] [ -Z 1|9 ] [ IP ] DATESPEC 
+       DATESPEC is MMDD in year 2025 or YYYYMMDD or . (today) or - (yesterday) or MMD[x-z] 
        DATESPEC may also be path to peerstats/loopstats file 
-       IP address  - only for peerstats graph, not for loopstats 
-    
+       IP address  - only necessary for peerstats graph but not for loopstats 
+                   - can be real IP or i.e. 127.127.22.0 or PPS(0) 
+
        -C config-file  - overwrite searching the config file 
        -s              - success rate 
        -p value        - poll interval used for calculation of success rate, default 64 
@@ -44,9 +45,9 @@ In the current version all scripts are using "bash"
        -t value        - timestemps per hour - default 1 
        -w value        - line width 
        -M offset       - offset values for calculation, based on precalcualted offset instead of -m 
-       -m min max      - minimum and maximum values for calculation, only for next 4 options below 
        -N value        - take each n'th record for calculation , default each record = 1 
        -q              - queued days - multiple days are not overlapped 
+       -m min max      - minimum and maximum values for calculation, only in combination with next 4 options below 
        -o              - show offset from peerstats file - column 5 
        -r              - show roundtrip delay from peerstats file - column 6 
        -d              - show dispersion from peerstats file - column 7 
@@ -56,6 +57,7 @@ In the current version all scripts are using "bash"
        -Z 1|9          - debug  1 ... less, 9 ... more 
        -Y string       - y-axis format, example 8.6f 
        -L              - use loopstats file instead of peerstats file , without IP as argument 
+                         this option is mandatory for the next 5 options 
        -O              - show offset from loopstats file - column 3 
        -D              - show drift compensation from loopstats file - column 4 
        -E              - show estimated error from loopstats file - column 5 
