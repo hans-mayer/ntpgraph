@@ -87,7 +87,7 @@ NVALUE=1
 thisusage(){
     set +x
     echo 
-    echo "show NTP peerstats or loopstats values as graph  - v 2025 11 08 "
+    echo "show NTP peerstats or loopstats values as graph  - v 2025 11 10 "
     echo "  author: ntpgraph@ma.yer.at "
     echo "  source: https://github.com/hans-mayer/ntpgraph "
     echo 
@@ -723,7 +723,7 @@ if test "$DEBUG" == y
     echo $STERM
     echo $FILE
     echo set title "$TITLE $AVG\n$SHOWOPT"
-    echo set xlabel "hour"
+    echo set xlabel "hour (UTC)"
     echo set ylabel "$YLBL"
     echo set xtics $XTICS
     echo set xrange [$XRANGE]
@@ -747,7 +747,7 @@ gnuplot << EOF
   $STERM
   $FILE
   set title "$TITLE $AVG\n$SHOWOPT"
-  set xlabel "hour"
+  set xlabel "hour (UTC)"
   set ylabel "$YLBL"
   set xtics $XTICS
   set xrange [$XRANGE]
